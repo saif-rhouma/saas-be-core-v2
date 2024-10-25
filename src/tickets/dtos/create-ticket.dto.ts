@@ -18,4 +18,8 @@ export class CreateTicketDto {
   @IsArray()
   @IsOptional()
   mentions: any;
+
+  @IsNumber()
+  @IsOptional()
+  quotationId: number;
 }

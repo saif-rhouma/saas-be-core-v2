@@ -47,6 +47,9 @@ import { SeedersModule } from './seeders/seeders.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import { Category } from './products/entities/category.entity';
 import { PermissionsGroup } from './users/entities/permissions-group.entity';
+import { QuotationsModule } from './quotations/quotations.module';
+import { Quotation } from './quotations/entities/quotation.entity';
+import { ProductToQuotation } from './quotations/entities/product_quotation.entity';
 
 @Module({
   imports: [
@@ -113,6 +116,8 @@ import { PermissionsGroup } from './users/entities/permissions-group.entity';
             Financial,
             Category,
             PermissionsGroup,
+            Quotation,
+            ProductToQuotation,
           ],
         };
       },
@@ -133,6 +138,7 @@ import { PermissionsGroup } from './users/entities/permissions-group.entity';
     AnalyticsModule,
     SeedersModule,
     NotificationsModule,
+    QuotationsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

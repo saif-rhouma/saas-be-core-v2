@@ -6,6 +6,7 @@ import { Stock } from 'src/stock/entities/stock.entity';
 import { Supplying } from 'src/stock/entities/supplying.entity';
 import { Column, Entity, ManyToOne, OneToMany, OneToOne, PrimaryGeneratedColumn } from 'typeorm';
 import { Category } from './category.entity';
+import { ProductToQuotation } from 'src/quotations/entities/product_quotation.entity';
 
 @Entity()
 export class Product {
@@ -48,5 +49,9 @@ export class Product {
 
   @OneToMany(() => ProductToOrder, (productToOrder) => productToOrder.product, { cascade: true })
   productToOrder!: ProductToOrder[];
+
+  @OneToMany(() => ProductToQuotation, (productToOrder) => productToOrder.product)
+  productToQuotation!: ProductToQuotation[];
+
   product: Stock[];
 }

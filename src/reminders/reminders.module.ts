@@ -9,6 +9,7 @@ import { ApplicationsModule } from 'src/applications/applications.module';
 import { UsersModule } from 'src/users/users.module';
 import { ReminderSubscriber } from './subscribers/reminder.subscriber';
 import { NotificationsModule } from 'src/notifications/notifications.module';
+import { QuotationsModule } from 'src/quotations/quotations.module';
 
 @Module({
   providers: [RemindersService, ReminderSubscriber],
@@ -16,6 +17,7 @@ import { NotificationsModule } from 'src/notifications/notifications.module';
   imports: [
     UsersModule,
     ApplicationsModule,
+    QuotationsModule,
     TypeOrmModule.forFeature([User, Application, Reminder]),
     forwardRef(() => NotificationsModule),
   ],

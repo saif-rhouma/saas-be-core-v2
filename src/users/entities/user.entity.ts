@@ -26,6 +26,7 @@ import { Reminder } from 'src/reminders/entities/reminder.entity';
 import { File } from 'src/files/entities/file.entity';
 import { Financial } from 'src/financial/entities/financial-year.entity';
 import { PermissionsGroup } from './permissions-group.entity';
+import { Quotation } from 'src/quotations/entities/quotation.entity';
 
 export enum AccountType {
   Free = 'Free',
@@ -121,6 +122,9 @@ export class User {
 
   @OneToMany(() => Order, (order) => order.createdBy)
   orders: Order[];
+
+  @OneToMany(() => Quotation, (quotation) => quotation.createdBy)
+  quotations: Quotation[];
 
   @OneToMany(() => Payment, (payment) => payment.createdBy)
   payments: Payment[];

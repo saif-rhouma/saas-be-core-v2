@@ -2,6 +2,7 @@
 import { Application } from 'src/applications/entities/application.entity';
 import { Order } from 'src/orders/entities/order.entity';
 import { Payment } from 'src/payments/entities/payment.entity';
+import { Quotation } from 'src/quotations/entities/quotation.entity';
 import { User } from 'src/users/entities/user.entity';
 import {
   Column,
@@ -71,6 +72,9 @@ export class Customer {
 
   @OneToMany(() => Order, (order) => order.customer)
   orders: Order[];
+
+  @OneToMany(() => Quotation, (quotation) => quotation.customer)
+  quotations: Quotation[];
 
   @OneToMany(() => Payment, (payment) => payment.customer)
   payments: Payment[];

@@ -12,6 +12,7 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 import { TicketMessage } from './ticket-message.entity';
+import { Quotation } from 'src/quotations/entities/quotation.entity';
 
 export enum Priority {
   Low = 'Low',
@@ -64,6 +65,9 @@ export class Ticket {
 
   @ManyToOne(() => Application, (application) => application.tickets)
   application: Application;
+
+  @ManyToOne(() => Quotation, (quotation) => quotation.tickets)
+  quotation: Quotation;
 
   @CreateDateColumn()
   createTime: Date;

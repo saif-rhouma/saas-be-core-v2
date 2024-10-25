@@ -8,6 +8,7 @@ import { UsersService } from 'src/users/services/users.service';
 import { CreateTicketDto } from '../dtos/create-ticket.dto';
 import { MSG_EXCEPTION } from 'src/common/constants/messages';
 import { TicketMessagesService } from './ticket-messages.service';
+import { QuotationsService } from 'src/quotations/services/quotations.service';
 
 @Injectable()
 export class TicketsService {
@@ -15,6 +16,7 @@ export class TicketsService {
     @InjectRepository(Ticket) private repo: Repository<Ticket>,
     private usersService: UsersService,
     private applicationsService: ApplicationsService,
+    private quotationsService: QuotationsService,
     @Inject(forwardRef(() => TicketMessagesService))
     private ticketMessagesService: TicketMessagesService,
   ) {}
@@ -58,6 +60,11 @@ export class TicketsService {
         const user = await this.usersService.findOne(item.id);
         ticket.mentions.push(user);
       }
+    }
+
+    if (ticketData.quotationId) {
+      const quotation = await this.quotationsService.findOneByApplication(ticketData.quotationId, applicationId);
+      ticket.quotation = quotation;
     }
     return this.repo.save(ticket);
   }

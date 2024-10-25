@@ -1,6 +1,6 @@
 /* eslint-disable prettier/prettier */
 import { Type } from 'class-transformer';
-import { IsDate, IsOptional, IsString } from 'class-validator';
+import { IsDate, IsNumber, IsOptional, IsString } from 'class-validator';
 
 export class CreateReminderDto {
   @IsDate()
@@ -13,4 +13,8 @@ export class CreateReminderDto {
   @IsString()
   @IsOptional()
   file: string;
+
+  @IsNumber()
+  @IsOptional()
+  quotationId: number;
 }

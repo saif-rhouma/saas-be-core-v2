@@ -8,6 +8,7 @@ import { Plan } from 'src/plans/entities/plan.entity';
 import { Category } from 'src/products/entities/category.entity';
 import { ProductAddon } from 'src/products/entities/product-addon.entity';
 import { Product } from 'src/products/entities/product.entity';
+import { Quotation } from 'src/quotations/entities/quotation.entity';
 import { Reminder } from 'src/reminders/entities/reminder.entity';
 import { Ticket } from 'src/tickets/entities/ticket.entity';
 import { PermissionsGroup } from 'src/users/entities/permissions-group.entity';
@@ -124,6 +125,9 @@ export class Application {
 
   @OneToMany(() => Order, (order) => order.application)
   orders: Order[];
+
+  @OneToMany(() => Quotation, (quotation) => quotation.application)
+  quotations: Quotation[];
 
   @OneToMany(() => Payment, (payment) => payment.application)
   payments: Payment[];

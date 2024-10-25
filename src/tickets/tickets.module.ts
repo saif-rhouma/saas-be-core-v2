@@ -14,6 +14,7 @@ import { NotificationsModule } from 'src/notifications/notifications.module';
 import { TicketSubscriber } from './subscribers/ticket.subscriber';
 import { TicketsEvents } from './events/tickets.events';
 import { TicketMessageSubscriber } from './subscribers/ticket-message.subscriber';
+import { QuotationsModule } from 'src/quotations/quotations.module';
 
 @Module({
   controllers: [TicketsController, TicketMessagesController],
@@ -21,6 +22,7 @@ import { TicketMessageSubscriber } from './subscribers/ticket-message.subscriber
   imports: [
     UsersModule,
     ApplicationsModule,
+    QuotationsModule,
     forwardRef(() => NotificationsModule),
     TypeOrmModule.forFeature([User, Application, Ticket, TicketMessage]),
   ],

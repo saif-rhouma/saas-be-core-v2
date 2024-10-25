@@ -1,6 +1,6 @@
 /* eslint-disable prettier/prettier */
 import { Type } from 'class-transformer';
-import { IsArray, IsDate, IsNumber } from 'class-validator';
+import { IsArray, IsDate, IsNumber, IsOptional, IsString } from 'class-validator';
 
 export interface ProductQty {
   id: number;
@@ -8,13 +8,17 @@ export interface ProductQty {
   quantity: number;
 }
 
-export class CreateOrderDto {
+export class CreateQuotationDto {
   @IsDate()
   @Type(() => Date)
-  orderDate: Date;
+  quotationDate: Date;
 
   @IsNumber()
   customer: number;
+
+  @IsString()
+  @IsOptional()
+  name: string;
 
   @IsNumber()
   discount: number;

@@ -8,12 +8,14 @@ import { Repository } from 'typeorm';
 import { CreateReminderDto } from '../dtos/create-reminder.dto';
 import { UpdateReminderDto } from '../dtos/update-reminder.dto';
 import { Reminder } from '../entities/reminder.entity';
+import { QuotationsService } from 'src/quotations/services/quotations.service';
 
 @Injectable()
 export class RemindersService {
   constructor(
     @InjectRepository(Reminder) private repo: Repository<Reminder>,
     private usersService: UsersService,
+    private quotationsService: QuotationsService,
     private applicationsService: ApplicationsService,
   ) {}
 
@@ -34,6 +36,12 @@ export class RemindersService {
 
     reminder.createdBy = user;
     reminder.application = application;
+
+    if (reminderData.quotationId) {
+      const quotation = await this.quotationsService.findOneByApplication(reminderData.quotationId, applicationId);
+      reminder.quotation = quotation;
+    }
+
     return this.repo.save(reminder);
   }
 

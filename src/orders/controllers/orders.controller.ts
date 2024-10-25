@@ -1,15 +1,14 @@
 /* eslint-disable prettier/prettier */
-import { Body, Controller, Delete, Get, NotFoundException, Param, Patch, Post, UseGuards } from '@nestjs/common';
-import { OrdersService } from '../services/orders.service';
-import { CreateOrderDto } from '../dtos/create-order.dto';
+import { Body, Controller, Delete, Get, Param, Patch, Post, UseGuards } from '@nestjs/common';
 import { GetUser } from 'src/common/decorators/getUser.decorator';
-import { User } from 'src/users/entities/user.entity';
 import { AuthenticationGuard } from 'src/common/guards/authentication.guard';
-import { OrderDto } from '../dtos/order.dto';
-import { Serialize } from 'src/common/interceptors/serialize.interceptor';
-import { MSG_EXCEPTION } from 'src/common/constants/messages';
-import { UpdateOrderDto } from '../dtos/update-order.dto';
 import getApplicationId from 'src/common/helpers/application-id.func';
+import { Serialize } from 'src/common/interceptors/serialize.interceptor';
+import { User } from 'src/users/entities/user.entity';
+import { CreateOrderDto } from '../dtos/create-order.dto';
+import { OrderDto } from '../dtos/order.dto';
+import { UpdateOrderDto } from '../dtos/update-order.dto';
+import { OrdersService } from '../services/orders.service';
 // import { Roles } from 'src/common/decorators/roles.decorator';
 // import { RoleType } from 'src/common/constants/roles';
 // import { AuthorizationGuard } from 'src/common/guards/authorization.guard';
@@ -22,7 +21,7 @@ export class OrdersController {
   @Serialize(OrderDto)
   @UseGuards(AuthenticationGuard)
   @Post('/create')
-  async createRole(@Body() orderData: CreateOrderDto, @GetUser() user: Partial<User>) {
+  async createOrder(@Body() orderData: CreateOrderDto, @GetUser() user: Partial<User>) {
     const appId = getApplicationId(user);
     return this.ordersService.createOrder(orderData, user.id, appId);
   }
@@ -32,9 +31,6 @@ export class OrdersController {
   async findAll(@GetUser() user: Partial<User>) {
     const appId = getApplicationId(user);
     const orders = await this.ordersService.findAllByApplication(appId);
-    if (!orders) {
-      throw new NotFoundException(MSG_EXCEPTION.NOT_FOUND_ORDER);
-    }
     return orders;
   }
 
@@ -90,7 +86,7 @@ export class OrdersController {
 
   @UseGuards(AuthenticationGuard)
   @Patch('/:id')
-  async updatePlan(@Param('id') id: string, @Body() orderData: UpdateOrderDto, @GetUser() user: Partial<User>) {
+  async updateOrder(@Param('id') id: string, @Body() orderData: UpdateOrderDto, @GetUser() user: Partial<User>) {
     const appId = getApplicationId(user);
     const order = await this.ordersService.update(parseInt(id), appId, orderData);
     return order;
@@ -98,7 +94,7 @@ export class OrdersController {
 
   @UseGuards(AuthenticationGuard)
   @Delete('/:id')
-  removePlan(@Param('id') id: string, @GetUser() user: Partial<User>) {
+  removeOrder(@Param('id') id: string, @GetUser() user: Partial<User>) {
     const appId = getApplicationId(user);
     return this.ordersService.remove(parseInt(id), appId);
   }
