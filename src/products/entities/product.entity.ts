@@ -32,6 +32,12 @@ export class Product {
   @Column()
   isActive: boolean;
 
+  @Column({
+    nullable: true,
+    default: false,
+  })
+  isHidden: boolean;
+
   @ManyToOne(() => Application, (application) => application.products)
   application: Application;
 

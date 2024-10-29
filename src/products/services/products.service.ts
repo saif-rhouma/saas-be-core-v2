@@ -96,7 +96,9 @@ export class ProductService {
     if (!product) {
       throw new NotFoundException(MSG_EXCEPTION.NOT_FOUND_PRODUCT);
     }
-    return this.repo.remove(product);
+    Object.assign(product, { isHidden: true });
+
+    return this.repo.save(product);
   }
 
   // findAll(appId: number) {
@@ -107,11 +109,25 @@ export class ProductService {
   // }
 
   async findAll(appId: number) {
-    const products = await this.repo.find({
-      where: { application: { id: appId } },
-      relations: { stock: true, productToOrder: { order: { customer: true } }, application: true, category: true },
-      order: { productToOrder: { order: { orderDate: 'ASC' } } },
-    });
+    // const products = await this.repo.find({
+    //   where: { application: { id: appId } },
+    //   relations: { stock: true, productToOrder: { order: { customer: true } }, application: true, category: true },
+    //   order: { id: 'DESC', productToOrder: { order: { ref: 'ASC' } } },
+    // });
+
+    const products = await this.repo
+      .createQueryBuilder('product')
+      .leftJoinAndSelect('product.stock', 'stock')
+      .leftJoinAndSelect('product.productToOrder', 'productToOrder')
+      .leftJoinAndSelect('productToOrder.order', 'order')
+      .leftJoinAndSelect('order.customer', 'customer')
+      .leftJoinAndSelect('product.application', 'application')
+      .leftJoinAndSelect('product.category', 'category')
+      .where('application.id = :appId', { appId })
+      .andWhere('product.isHidden = :isHidden', { isHidden: false })
+      .orderBy('product.id', 'DESC')
+      .addOrderBy('CAST(SUBSTRING(order.ref, 4) AS UNSIGNED)', 'ASC') // Extract numeric part for sorting
+      .getMany();
     products.forEach((prod) => {
       const filtered = prod.productToOrder.filter((item) => item?.order?.status !== OrderStatus.Draft);
       prod.productToOrder = filtered.slice(0, 6);

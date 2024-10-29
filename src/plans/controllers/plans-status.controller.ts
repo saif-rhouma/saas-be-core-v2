@@ -48,7 +48,7 @@ export class PlansStatusController {
   @Patch('/:id')
   async updatePlan(@Param('id') id: string, @Body() planData: UpdatePlanStatusDto, @GetUser() user: Partial<User>) {
     const appId = getApplicationId(user);
-    const order = await this.plansService.update(parseInt(id), appId, planData, undefined);
-    return order;
+    const plan = await this.plansService.updateStatus(parseInt(id), appId, planData, undefined);
+    return plan;
   }
 }

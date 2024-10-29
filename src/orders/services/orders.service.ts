@@ -82,15 +82,23 @@ export class OrdersService {
     return resOrder;
   }
 
-  findAllByApplication(appId: number) {
+  async findAllByApplication(appId: number) {
     if (!appId || isNaN(appId)) {
       return null;
     }
-    const orders = this.repo.find({
-      where: { application: { id: appId } },
-      relations: ['productToOrder', 'productToOrder.product', 'customer'],
-      order: { orderDate: 'ASC' },
-    });
+    // const orders = this.repo.find({
+    //   where: { application: { id: appId } },
+    //   relations: ['productToOrder', 'productToOrder.product', 'customer'],
+    //   order: { ref: 'ASC' },
+    // });
+    const orders = await this.repo
+      .createQueryBuilder('order')
+      .leftJoinAndSelect('order.productToOrder', 'productToOrder')
+      .leftJoinAndSelect('productToOrder.product', 'product')
+      .leftJoinAndSelect('order.customer', 'customer')
+      .where('order.applicationId = :appId', { appId })
+      .orderBy('CAST(SUBSTRING(order.ref, 4, LENGTH(order.ref)) AS UNSIGNED)', 'ASC')
+      .getMany();
     if (!orders) {
       throw new NotFoundException(MSG_EXCEPTION.NOT_FOUND_ORDER);
     }
@@ -238,6 +246,7 @@ export class OrdersService {
       if (!appId) {
         return null;
       }
+
       const analytics = await this.repo.manager.query(
         `select SUM(CASE WHEN status = '${OrderStatus.Ready}' THEN 1 ELSE 0 END) As Ready,
     SUM(CASE WHEN status = '${OrderStatus.Delivered}' THEN 1 ELSE 0 END) AS Delivered,
@@ -285,6 +294,51 @@ export class OrdersService {
       if (!appId) {
         return null;
       }
+
+      const categories = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+      const queryRes = await this.repo
+        .createQueryBuilder('order')
+        .select("(strftime('%Y', orderDate))", 'year')
+        .addSelect("(strftime('%m', orderDate))", 'month')
+        .addSelect(`SUM(CASE WHEN order.status = '${OrderStatus.Ready}' THEN 1 ELSE 0 END)`, 'readyCount')
+        .addSelect(`SUM(CASE WHEN order.status = '${OrderStatus.Delivered}' THEN 1 ELSE 0 END)`, 'deliveredCount')
+        .addSelect(`SUM(CASE WHEN order.status = '${OrderStatus.InProcess}' THEN 1 ELSE 0 END)`, 'progressCount')
+        .groupBy('year')
+        .addGroupBy('month')
+        .orderBy('year', 'ASC')
+        .addOrderBy('month', 'ASC')
+        .getRawMany();
+
+      const seriesData: { [year: string]: { Ready: number[]; Delivered: number[]; InProcess: number[] } } = {};
+
+      queryRes.forEach((entry) => {
+        const year = entry.year;
+        const monthIndex = parseInt(entry.month, 10) - 1;
+
+        if (!seriesData[year]) {
+          seriesData[year] = { Ready: Array(12).fill(0), Delivered: Array(12).fill(0), InProcess: Array(12).fill(0) };
+        }
+
+        seriesData[year].Ready[monthIndex] = parseInt(entry.readyCount, 10);
+        seriesData[year].Delivered[monthIndex] = parseInt(entry.deliveredCount, 10);
+        seriesData[year].InProcess[monthIndex] = parseInt(entry.progressCount, 10);
+      });
+
+      const series = Object.keys(seriesData).map((year) => ({
+        name: year,
+        data: [
+          { name: 'Ready', data: seriesData[year].Ready },
+          { name: 'Delivered', data: seriesData[year].Delivered },
+          { name: 'InProcess', data: seriesData[year].InProcess },
+        ],
+      }));
+
+      const chartData = {
+        categories,
+        series,
+      };
+
       const analytics = await this.repo.manager.query(
         `select SUM(CASE WHEN status = '${OrderStatus.Ready}' THEN 1 ELSE 0 END) As Ready,
     SUM(CASE WHEN status = '${OrderStatus.Delivered}' THEN 1 ELSE 0 END) AS Delivered,
@@ -341,8 +395,11 @@ export class OrdersService {
         inProcessLastSixMonth,
         readyLastSixMonth,
         deliveredLastSixMonth,
+        chartData,
       };
-    } catch (error) {}
+    } catch (error) {
+      console.log('---> ', error);
+    }
   }
 
   findLatestOrders(appId: number) {
@@ -360,5 +417,27 @@ export class OrdersService {
       throw new NotFoundException(MSG_EXCEPTION.NOT_FOUND_ORDER);
     }
     return orders;
+  }
+
+  async updateNullRefs(appId: number) {
+    const allEntities = await this.repo.find({
+      where: { application: { id: appId } },
+      order: { createTime: 'ASC' },
+    });
+    let counter = 1;
+    for (const entity of allEntities) {
+      // If `ref` is null, generate a new value with the prefix 'ORD-' followed by the counter
+      if (!entity.ref) {
+        entity.ref = `ORD-0${counter}`;
+        await this.repo.save(entity);
+        counter += 1;
+      } else {
+        // Parse the current ref number and set the counter to the next number if it’s greater
+        const currentNumber = parseInt(entity.ref.split('-')[1], 10);
+        if (currentNumber >= counter) {
+          counter = currentNumber + 1;
+        }
+      }
+    }
   }
 }

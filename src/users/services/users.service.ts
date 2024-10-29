@@ -213,7 +213,7 @@ export class UsersService {
       return null;
     }
     const users = this.repo.find({
-      where: { applications: { id: appId }, roles: { name: RoleType.STAFF } },
+      where: { applications: { id: appId }, roles: { name: RoleType.STAFF }, isHidden: false },
       relations: { roles: true, userOwnedApps: true, applications: true },
     });
     if (!users) {
@@ -331,7 +331,9 @@ export class UsersService {
     if (!staff) {
       throw new NotFoundException(MSG_EXCEPTION.NOT_FOUND_USER_STAFF);
     }
-    return this.repo.remove(staff);
+    staff.isHidden = true;
+    staff.isActive = false;
+    return this.repo.save(staff);
   }
 
   async hasPermission(id: number, slugs: string[]) {

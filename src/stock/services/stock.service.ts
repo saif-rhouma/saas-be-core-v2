@@ -55,6 +55,32 @@ export class StockService {
     }
   }
 
+  async addFromPlan(quantity: number, product: Product, appId: number) {
+    const { id } = product;
+    const stock = await this.findOneByProduct(id, appId);
+    if (stock) {
+      stock.quantity += quantity;
+      return this.repo.save(stock);
+    } else {
+      const newStock = this.repo.create({ quantity });
+      newStock.product = product;
+      return this.repo.save(newStock);
+    }
+  }
+
+  async subFromPlan(quantity: number, product: Product, appId: number) {
+    const { id } = product;
+    const stock = await this.findOneByProduct(id, appId);
+    if (stock) {
+      stock.quantity -= quantity;
+      return this.repo.save(stock);
+    } else {
+      const newStock = this.repo.create({ quantity });
+      newStock.product = product;
+      return this.repo.save(newStock);
+    }
+  }
+
   findOne(id: number) {
     if (!id) {
       return null;

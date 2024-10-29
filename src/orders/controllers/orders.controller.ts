@@ -35,6 +35,14 @@ export class OrdersController {
   }
 
   @UseGuards(AuthenticationGuard)
+  @Get('/tools/refs')
+  async updateAllNullOrderRef(@GetUser() user: Partial<User>) {
+    const appId = getApplicationId(user);
+    const orders = await this.ordersService.updateNullRefs(appId);
+    return orders;
+  }
+
+  @UseGuards(AuthenticationGuard)
   @Get('/approve/:id')
   async approve(@Param('id') id: string, @GetUser() user: Partial<User>) {
     const appId = getApplicationId(user);

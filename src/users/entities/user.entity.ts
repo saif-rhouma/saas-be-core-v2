@@ -98,6 +98,12 @@ export class User {
   })
   isActive: boolean;
 
+  @Column({
+    nullable: true,
+    default: false,
+  })
+  isHidden: boolean;
+
   @OneToMany(() => Application, (application) => application.owner)
   userOwnedApps: Application[];
 

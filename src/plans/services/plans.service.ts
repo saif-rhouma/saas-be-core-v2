@@ -73,18 +73,28 @@ export class PlansService {
     return plan;
   }
 
-  findAllByApplication(appId: number) {
+  async findAllByApplication(appId: number) {
     if (!appId) {
       return null;
     }
-    const plan = this.repo.find({
-      where: { application: { id: appId } },
-      relations: { product: true, createdBy: true, order: true },
-    });
-    if (!plan) {
+    // const plan = this.repo.find({
+    //   where: { application: { id: appId } },
+    //   relations: { product: true, createdBy: true, order: true },
+    // });
+
+    const plans = await this.repo
+      .createQueryBuilder('plan')
+      .leftJoinAndSelect('plan.createdBy', 'user')
+      .leftJoinAndSelect('plan.order', 'order')
+      .leftJoinAndSelect('plan.product', 'product')
+      .where('plan.applicationId = :appId', { appId })
+      .orderBy('CAST(SUBSTRING(plan.ref, 4, LENGTH(plan.ref)) AS UNSIGNED)', 'ASC')
+      .getMany();
+
+    if (!plans) {
       throw new NotFoundException(MSG_EXCEPTION.NOT_FOUND_PLAN);
     }
-    return plan;
+    return plans;
   }
 
   async findOneByApplication(id: number, appId: number) {
@@ -124,6 +134,27 @@ export class PlansService {
     return this.repo.save(plan);
   }
 
+  async updateStatus(id: number, appId: number, attrs: Partial<Plan>, productId: number) {
+    let product;
+    const plan = await this.findOneByApplication(id, appId);
+    if (productId) {
+      product = await this.productsService.findOne(productId);
+      if (!product) {
+        throw new NotFoundException(MSG_EXCEPTION.NOT_FOUND_PRODUCT);
+      }
+      plan.product = product;
+    }
+    Object.assign(plan, attrs);
+    if (plan.status === PlanStatus.Ready && !plan.isTransferred) {
+      await this.stockService.createFromPlan(plan.quantity, plan.product, appId);
+      plan.isTransferred = true;
+    } else if (plan.status === PlanStatus.ProcessingB && plan.isTransferred) {
+      await this.stockService.subFromPlan(plan.quantity, plan.product, appId);
+      plan.isTransferred = false;
+    }
+    return this.repo.save(plan);
+  }
+
   async remove(id: number, appId: number) {
     if (!id || !appId) {
       return null;
@@ -148,6 +179,32 @@ export class PlansService {
     return plan;
   }
 
+  async addFromStock(planId: number, appId: number) {
+    const plan = await this.findOne(planId);
+    if (!plan) {
+      throw new NotFoundException(MSG_EXCEPTION.NOT_FOUND_PLAN);
+    }
+    if (!plan.isTransferred) {
+      await this.stockService.addFromPlan(plan.quantity, plan.product, appId);
+      plan.isTransferred = true;
+      return this.repo.save(plan);
+    }
+    return plan;
+  }
+
+  async removeFromStock(planId: number, appId: number) {
+    const plan = await this.findOne(planId);
+    if (!plan) {
+      throw new NotFoundException(MSG_EXCEPTION.NOT_FOUND_PLAN);
+    }
+    if (plan.isTransferred) {
+      await this.stockService.subFromPlan(plan.quantity, plan.product, appId);
+      plan.isTransferred = false;
+      return this.repo.save(plan);
+    }
+    return plan;
+  }
+
   async getStockPlan(appId: number) {
     const res = await this.repo.manager.query(
       `SELECT 
@@ -164,5 +221,27 @@ export class PlansService {
     );
 
     return res;
+  }
+
+  async updateNullRefs(appId: number) {
+    const allEntities = await this.repo.find({
+      where: { application: { id: appId } },
+      order: { createTime: 'ASC' },
+    });
+    let counter = 1;
+    for (const entity of allEntities) {
+      // If `ref` is null, generate a new value with the prefix 'ORD-' followed by the counter
+      if (!entity.ref) {
+        entity.ref = `PLN-0${counter}`;
+        await this.repo.save(entity);
+        counter += 1;
+      } else {
+        // Parse the current ref number and set the counter to the next number if it’s greater
+        const currentNumber = parseInt(entity.ref.split('-')[1], 10);
+        if (currentNumber >= counter) {
+          counter = currentNumber + 1;
+        }
+      }
+    }
   }
 }

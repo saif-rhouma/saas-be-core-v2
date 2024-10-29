@@ -31,6 +31,14 @@ export class PlansController {
     return plan;
   }
 
+  @UseGuards(AuthenticationGuard)
+  @Get('/tools/refs')
+  async updateAllNullOrderRef(@GetUser() user: Partial<User>) {
+    const appId = getApplicationId(user);
+    const plans = await this.plansService.updateNullRefs(appId);
+    return plans;
+  }
+
   @Serialize(PlanDto)
   @UseGuards(AuthenticationGuard)
   @Get()
