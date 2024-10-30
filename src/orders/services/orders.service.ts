@@ -304,6 +304,7 @@ export class OrdersService {
         .addSelect(`SUM(CASE WHEN order.status = '${OrderStatus.Ready}' THEN 1 ELSE 0 END)`, 'readyCount')
         .addSelect(`SUM(CASE WHEN order.status = '${OrderStatus.Delivered}' THEN 1 ELSE 0 END)`, 'deliveredCount')
         .addSelect(`SUM(CASE WHEN order.status = '${OrderStatus.InProcess}' THEN 1 ELSE 0 END)`, 'progressCount')
+        .where('order.applicationId = :appId', { appId })
         .groupBy('year')
         .addGroupBy('month')
         .orderBy('year', 'ASC')
