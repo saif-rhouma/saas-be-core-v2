@@ -83,7 +83,7 @@ export class Order {
   @ManyToOne(() => Application, (application) => application.orders)
   application: Application;
 
-  @OneToMany(() => Payment, (payment) => payment.order, { cascade: true, onDelete: 'CASCADE' })
+  @OneToMany(() => Payment, (payment) => payment.order)
   payments: Payment[];
 
   @CreateDateColumn()

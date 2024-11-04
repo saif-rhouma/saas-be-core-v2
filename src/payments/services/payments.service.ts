@@ -64,17 +64,25 @@ export class PaymentsService {
     return resPayment;
   }
 
-  findAllByApplication(appId: number) {
+  async findAllByApplication(appId: number) {
     if (!appId) {
       return null;
     }
     const payments = this.repo.find({
       where: { application: { id: appId } },
-      relations: { order: true, customer: true },
+      relations: { customer: true, order: true },
     });
+    // const payments = await this.repo
+    //   .createQueryBuilder('payment')
+    //   .leftJoinAndSelect('payment.customer', 'customer')
+    //   .leftJoinAndSelect('payment.order', 'order')
+    //   .where('payment.application.id = :appId', { appId })
+    //   .getMany();
+
     if (!payments) {
       throw new NotFoundException(MSG_EXCEPTION.NOT_FOUND_PAYMENT);
     }
+
     return payments;
   }
 
@@ -86,6 +94,7 @@ export class PaymentsService {
       where: { id, application: { id: appId } },
       relations: { order: true, customer: true },
     });
+    console.log('---> payments', payment);
     if (!payment) {
       throw new NotFoundException(MSG_EXCEPTION.NOT_FOUND_PAYMENT);
     }

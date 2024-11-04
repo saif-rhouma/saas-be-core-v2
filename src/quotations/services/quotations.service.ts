@@ -124,15 +124,27 @@ export class QuotationsService {
     return resQuotation;
   }
 
-  findAllByApplication(appId: number) {
+  async findAllByApplication(appId: number) {
     if (!appId || isNaN(appId)) {
       return null;
     }
-    const quotations = this.repo.find({
-      where: { application: { id: appId } },
-      relations: ['productToQuotation', 'productToQuotation.product', 'customer', 'order', 'createdBy'],
-      order: { quotationDate: 'ASC' },
-    });
+    // const quotations = this.repo.find({
+    //   where: { application: { id: appId } },
+    //   relations: ['productToQuotation', 'productToQuotation.product', 'customer', 'order', 'createdBy'],
+    //   order: { quotationDate: 'ASC' },
+    // });
+
+    const quotations = await this.repo
+      .createQueryBuilder('quotation')
+      .leftJoinAndSelect('quotation.createdBy', 'user')
+      .leftJoinAndSelect('quotation.productToQuotation', 'productToQuotation')
+      .leftJoinAndSelect('productToQuotation.product', 'product')
+      .leftJoinAndSelect('quotation.order', 'order')
+      .leftJoinAndSelect('quotation.customer', 'customer')
+      .where('quotation.applicationId = :appId', { appId })
+      .orderBy('CAST(SUBSTRING(quotation.ref, 4, LENGTH(quotation.ref)) AS UNSIGNED)', 'ASC')
+      .getMany();
+
     if (!quotations) {
       throw new NotFoundException(MSG_EXCEPTION.NOT_FOUND_QUOTATION);
     }
