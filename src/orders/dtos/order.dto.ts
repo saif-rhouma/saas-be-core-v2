@@ -3,7 +3,7 @@ import { Expose, Transform } from 'class-transformer';
 
 export class OrderDto {
   @Expose()
-  id: number;
+  id: string;
   @Expose()
   orderDate: Date;
   @Expose()

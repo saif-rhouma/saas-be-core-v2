@@ -4,15 +4,7 @@ import { Customer } from 'src/customers/entities/customer.entity';
 import { Payment } from 'src/payments/entities/payment.entity';
 import { Plan } from 'src/plans/entities/plan.entity';
 import { User } from 'src/users/entities/user.entity';
-import {
-  Column,
-  CreateDateColumn,
-  Entity,
-  ManyToOne,
-  OneToMany,
-  PrimaryGeneratedColumn,
-  UpdateDateColumn,
-} from 'typeorm';
+import { Column, CreateDateColumn, Entity, ManyToOne, OneToMany, PrimaryColumn, UpdateDateColumn } from 'typeorm';
 import { ProductToOrder } from './product_order.entity';
 
 export enum OrderStatus {
@@ -25,8 +17,10 @@ export enum OrderStatus {
 
 @Entity()
 export class Order {
-  @PrimaryGeneratedColumn()
-  id: number;
+  @PrimaryColumn('varchar', {
+    length: 250,
+  })
+  id: string;
 
   @Column({ nullable: true })
   ref: string;

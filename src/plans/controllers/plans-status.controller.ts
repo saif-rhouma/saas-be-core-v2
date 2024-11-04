@@ -1,3 +1,4 @@
+/* eslint-disable prettier/prettier */
 import { Body, Controller, Get, NotFoundException, Param, Patch, UseGuards } from '@nestjs/common';
 import { PlansService } from '../services/plans.service';
 import { AuthenticationGuard } from 'src/common/guards/authentication.guard';
@@ -48,7 +49,7 @@ export class PlansStatusController {
   @Patch('/:id')
   async updatePlan(@Param('id') id: string, @Body() planData: UpdatePlanStatusDto, @GetUser() user: Partial<User>) {
     const appId = getApplicationId(user);
-    const plan = await this.plansService.updateStatus(parseInt(id), appId, planData, undefined);
+    const plan = await this.plansService.updateStatus(id, appId, planData, undefined);
     return plan;
   }
 }

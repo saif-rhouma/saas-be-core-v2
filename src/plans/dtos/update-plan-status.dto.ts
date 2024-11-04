@@ -1,3 +1,4 @@
+/* eslint-disable prettier/prettier */
 import { IsEnum, IsOptional } from 'class-validator';
 import { PlanStatus } from '../entities/plan.entity';
 

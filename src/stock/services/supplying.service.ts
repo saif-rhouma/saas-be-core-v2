@@ -26,7 +26,7 @@ export class SupplyingService {
     return supplying;
   }
 
-  async findOneByPlan(planId: number) {
+  async findOneByPlan(planId: string) {
     if (!planId) {
       return null;
     }
@@ -48,14 +48,14 @@ export class SupplyingService {
     return this.repo.remove(supplying);
   }
 
-  async updateStatus(planId: number, status: SupplyingStatus) {
+  async updateStatus(planId: string, status: SupplyingStatus) {
     const supplying = await this.findOneByPlan(planId);
     supplying.status = status;
     await this.repo.save(supplying);
     return supplying;
   }
 
-  async updateQuantity(planId: number, quantity: number) {
+  async updateQuantity(planId: string, quantity: number) {
     const supplying = await this.findOneByPlan(planId);
     supplying.quantity = quantity;
     await this.repo.save(supplying);

@@ -5,7 +5,7 @@ import { PlanStatus } from '../entities/plan.entity';
 
 export class PlanDto {
   @Expose()
-  id: number;
+  id: string;
 
   @Expose()
   planDate: Date;

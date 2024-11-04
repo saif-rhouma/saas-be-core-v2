@@ -4,6 +4,7 @@ import { Order } from '../entities/order.entity';
 import { Inject } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { generateCodeName } from 'src/common/helpers/generateCodeName';
+import { randomUUID } from 'crypto';
 
 @EventSubscriber()
 export class OrderSubscriber implements EntitySubscriberInterface<Order> {
@@ -24,6 +25,7 @@ export class OrderSubscriber implements EntitySubscriberInterface<Order> {
   async beforeInsert(event: InsertEvent<Order>) {
     // await this.generateOrderCode(event.entity);
     await generateCodeName(event.entity, this.orderRepository, 'ORD');
+    event.entity.id = randomUUID();
     event.entity.snapshotTaxPercentage = event.entity.application.taxPercentage;
   }
 }

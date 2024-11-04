@@ -46,7 +46,7 @@ export class ProductQuotationService {
     }
   }
 
-  async remove(quotationId: number) {
+  async remove(quotationId: string) {
     if (!quotationId) {
       return null;
     }
@@ -61,16 +61,14 @@ export class ProductQuotationService {
     return res;
   }
 
-  async removeAllByQuotationId(quotationId: number) {
+  async removeAllByQuotationId(quotationId: string) {
     if (!quotationId) {
       return null;
     }
-    console.log('---> quotationId', quotationId);
     return this.repo.delete({ quotation: { id: quotationId } });
   }
 
   async removeAllByIds(Ids: number[]) {
-    console.log('---> Ids', Ids);
     return this.repo.delete({ id: In(Ids) });
   }
 }

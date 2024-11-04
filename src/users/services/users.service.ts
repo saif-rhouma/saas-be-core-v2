@@ -14,6 +14,7 @@ import { CreateStaffDto } from 'src/auth/dtos/create-staff.dto';
 import { UpdateStaffDto } from '../dtos/update-staff.dto';
 import { PermissionsGroupService } from './permissions-group.service';
 import { PermissionsGroup } from '../entities/permissions-group.entity';
+import { nanoid } from 'nanoid';
 
 @Injectable()
 export class UsersService {
@@ -323,7 +324,7 @@ export class UsersService {
     return this.repo.remove(user);
   }
 
-  async removeStaff(id: number, appId: number) {
+  async removeStaff(id: number, appId: number, userId: number) {
     if (!id || !appId) {
       return null;
     }
@@ -331,7 +332,9 @@ export class UsersService {
     if (!staff) {
       throw new NotFoundException(MSG_EXCEPTION.NOT_FOUND_USER_STAFF);
     }
+
     staff.isHidden = true;
+    staff.email += ` [R.${userId}.${nanoid()}]`;
     staff.isActive = false;
     return this.repo.save(staff);
   }

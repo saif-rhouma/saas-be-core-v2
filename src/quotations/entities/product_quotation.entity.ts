@@ -12,7 +12,7 @@ export class ProductToQuotation {
   public productId: number;
 
   @Column({ nullable: true })
-  public quotationId: number;
+  public quotationId: string;
 
   @Column()
   public quantity: number;

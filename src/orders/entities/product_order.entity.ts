@@ -12,7 +12,7 @@ export class ProductToOrder {
   public productId: number;
 
   @Column()
-  public orderId: number;
+  public orderId: string;
 
   @Column()
   public quantity: number;

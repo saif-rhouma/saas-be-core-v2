@@ -27,7 +27,7 @@ export class PlansController {
   @Post('/stock/:id')
   async transferToStock(@Param('id') id: string, @GetUser() user: Partial<User>) {
     const appId = getApplicationId(user);
-    const plan = await this.plansService.transferToStock(parseInt(id), appId);
+    const plan = await this.plansService.transferToStock(id, appId);
     return plan;
   }
 
@@ -55,7 +55,7 @@ export class PlansController {
   @Get('/:id')
   async findPlan(@Param('id') id: string, @GetUser() user: Partial<User>) {
     const appId = getApplicationId(user);
-    const plan = await this.plansService.findOneByApplication(parseInt(id), appId);
+    const plan = await this.plansService.findOneByApplication(id, appId);
     return plan;
   }
 
@@ -63,7 +63,7 @@ export class PlansController {
   @Patch('/:id')
   async updatePlan(@Param('id') id: string, @Body() planData: UpdatePlanDto, @GetUser() user: Partial<User>) {
     const appId = getApplicationId(user);
-    const plan = await this.plansService.update(parseInt(id), appId, planData, planData.productId);
+    const plan = await this.plansService.update(id, appId, planData, planData.productId);
     return plan;
   }
 
@@ -71,6 +71,6 @@ export class PlansController {
   @Delete('/:id')
   removePlan(@Param('id') id: string, @GetUser() user: Partial<User>) {
     const appId = getApplicationId(user);
-    return this.plansService.remove(parseInt(id), appId);
+    return this.plansService.remove(id, appId);
   }
 }

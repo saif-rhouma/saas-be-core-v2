@@ -7,7 +7,7 @@ import {
   ManyToOne,
   OneToMany,
   OneToOne,
-  PrimaryGeneratedColumn,
+  PrimaryColumn,
   UpdateDateColumn,
 } from 'typeorm';
 import { ProductToQuotation } from './product_quotation.entity';
@@ -27,8 +27,10 @@ export enum QuotationStatus {
 
 @Entity()
 export class Quotation {
-  @PrimaryGeneratedColumn()
-  id: number;
+  @PrimaryColumn('varchar', {
+    length: 250,
+  })
+  id: string;
 
   @Column({ nullable: true })
   ref: string;

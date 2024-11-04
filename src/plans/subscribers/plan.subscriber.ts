@@ -4,6 +4,7 @@ import { Plan } from '../entities/plan.entity';
 import { Inject } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { generateCodeName } from 'src/common/helpers/generateCodeName';
+import { randomUUID } from 'crypto';
 
 @EventSubscriber()
 export class PlanSubscriber implements EntitySubscriberInterface<Plan> {
@@ -23,6 +24,7 @@ export class PlanSubscriber implements EntitySubscriberInterface<Plan> {
    */
   async beforeInsert(event: InsertEvent<Plan>) {
     await generateCodeName(event.entity, this.planRepository, 'PLN');
+    event.entity.id = randomUUID();
   }
 
   // async generatePlanCode(plan: Plan) {

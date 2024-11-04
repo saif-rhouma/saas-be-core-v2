@@ -97,7 +97,7 @@ export class PlansService {
     return plans;
   }
 
-  async findOneByApplication(id: number, appId: number) {
+  async findOneByApplication(id: string, appId: number) {
     if (!id || !appId) {
       return null;
     }
@@ -111,7 +111,7 @@ export class PlansService {
     return plan;
   }
 
-  async findOne(id: number) {
+  async findOne(id: string) {
     if (!id) {
       return null;
     }
@@ -119,7 +119,7 @@ export class PlansService {
     return plan;
   }
 
-  async update(id: number, appId: number, attrs: Partial<Plan>, productId: number) {
+  async update(id: string, appId: number, attrs: Partial<Plan>, productId: number) {
     let product;
     const plan = await this.findOneByApplication(id, appId);
     if (productId) {
@@ -134,7 +134,7 @@ export class PlansService {
     return this.repo.save(plan);
   }
 
-  async updateStatus(id: number, appId: number, attrs: Partial<Plan>, productId: number) {
+  async updateStatus(id: string, appId: number, attrs: Partial<Plan>, productId: number) {
     let product;
     const plan = await this.findOneByApplication(id, appId);
     if (productId) {
@@ -155,7 +155,7 @@ export class PlansService {
     return this.repo.save(plan);
   }
 
-  async remove(id: number, appId: number) {
+  async remove(id: string, appId: number) {
     if (!id || !appId) {
       return null;
     }
@@ -166,7 +166,7 @@ export class PlansService {
     return this.repo.remove(plan);
   }
 
-  async transferToStock(planId: number, appId: number) {
+  async transferToStock(planId: string, appId: number) {
     const plan = await this.findOne(planId);
     if (!plan) {
       throw new NotFoundException(MSG_EXCEPTION.NOT_FOUND_PLAN);
@@ -179,7 +179,7 @@ export class PlansService {
     return plan;
   }
 
-  async addFromStock(planId: number, appId: number) {
+  async addFromStock(planId: string, appId: number) {
     const plan = await this.findOne(planId);
     if (!plan) {
       throw new NotFoundException(MSG_EXCEPTION.NOT_FOUND_PLAN);
@@ -192,7 +192,7 @@ export class PlansService {
     return plan;
   }
 
-  async removeFromStock(planId: number, appId: number) {
+  async removeFromStock(planId: string, appId: number) {
     const plan = await this.findOne(planId);
     if (!plan) {
       throw new NotFoundException(MSG_EXCEPTION.NOT_FOUND_PLAN);

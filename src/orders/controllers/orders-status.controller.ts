@@ -50,7 +50,7 @@ export class OrdersStatusController {
   @Patch('/:id')
   async updatePlan(@Param('id') id: string, @Body() orderData: UpdateOrderStatusDto, @GetUser() user: Partial<User>) {
     const appId = getApplicationId(user);
-    const order = await this.ordersService.updateStatus(parseInt(id), appId, orderData);
+    const order = await this.ordersService.updateStatus(id, appId, orderData);
     return order;
   }
 }

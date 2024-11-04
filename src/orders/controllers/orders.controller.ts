@@ -46,7 +46,7 @@ export class OrdersController {
   @Get('/approve/:id')
   async approve(@Param('id') id: string, @GetUser() user: Partial<User>) {
     const appId = getApplicationId(user);
-    const order = await this.ordersService.detailsApprove(parseInt(id), appId);
+    const order = await this.ordersService.detailsApprove(id, appId);
     const outOfStock = [];
     const { productToOrder } = order;
     for (const ordProd of productToOrder) {
@@ -61,7 +61,7 @@ export class OrdersController {
       }
     }
     if (outOfStock.length === 0) {
-      const order = await this.ordersService.update(parseInt(id), appId, { status: OrderStatus.InProcess });
+      const order = await this.ordersService.update(id, appId, { status: OrderStatus.InProcess });
       return order;
     } else {
       return outOfStock;
@@ -88,7 +88,7 @@ export class OrdersController {
   @Get('/:id')
   async findOrder(@Param('id') id: string, @GetUser() user: Partial<User>) {
     const appId = getApplicationId(user);
-    const order = await this.ordersService.findOneByApplication(parseInt(id), appId);
+    const order = await this.ordersService.findOneByApplication(id, appId);
     return order;
   }
 
@@ -96,7 +96,7 @@ export class OrdersController {
   @Patch('/:id')
   async updateOrder(@Param('id') id: string, @Body() orderData: UpdateOrderDto, @GetUser() user: Partial<User>) {
     const appId = getApplicationId(user);
-    const order = await this.ordersService.update(parseInt(id), appId, orderData);
+    const order = await this.ordersService.update(id, appId, orderData);
     return order;
   }
 
@@ -104,6 +104,6 @@ export class OrdersController {
   @Delete('/:id')
   removeOrder(@Param('id') id: string, @GetUser() user: Partial<User>) {
     const appId = getApplicationId(user);
-    return this.ordersService.remove(parseInt(id), appId);
+    return this.ordersService.remove(id, appId);
   }
 }

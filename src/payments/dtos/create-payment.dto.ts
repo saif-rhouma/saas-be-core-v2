@@ -21,8 +21,8 @@ export class CreatePaymentDto {
   @IsNumber()
   customerId: number;
 
-  @IsNumber()
-  orderId: number;
+  @IsString()
+  orderId: string;
 
   @IsString()
   @IsOptional()

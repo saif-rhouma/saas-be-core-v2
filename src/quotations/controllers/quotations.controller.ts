@@ -30,6 +30,7 @@ export class QuotationsController {
     return quotation;
   }
 
+  @Serialize(QuotationDto)
   @UseGuards(AuthenticationGuard)
   @Get()
   findAll(@GetUser() user: Partial<User>) {
@@ -41,7 +42,7 @@ export class QuotationsController {
   @Get('/:id')
   findQuotation(@Param('id') id: string, @GetUser() user: Partial<User>) {
     const appId = getApplicationId(user);
-    return this.quotationsService.findOneByApplication(parseInt(id), appId);
+    return this.quotationsService.findOneByApplication(id, appId);
   }
 
   @UseGuards(AuthenticationGuard)
@@ -52,7 +53,7 @@ export class QuotationsController {
     @GetUser() user: Partial<User>,
   ) {
     const appId = getApplicationId(user);
-    return this.quotationsService.updateQuotation(parseInt(id), appId, quotationData);
+    return this.quotationsService.updateQuotation(id, appId, quotationData);
   }
 
   @UseGuards(AuthenticationGuard)
@@ -63,13 +64,13 @@ export class QuotationsController {
     @GetUser() user: Partial<User>,
   ) {
     const appId = getApplicationId(user);
-    return this.quotationsService.update(parseInt(id), appId, quotationData);
+    return this.quotationsService.update(id, appId, quotationData);
   }
 
   @UseGuards(AuthenticationGuard)
   @Delete('/:id')
   removeQuotation(@Param('id') id: string, @GetUser() user: Partial<User>) {
     const appId = getApplicationId(user);
-    return this.quotationsService.remove(parseInt(id), appId);
+    return this.quotationsService.remove(id, appId);
   }
 }

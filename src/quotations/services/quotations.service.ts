@@ -79,7 +79,7 @@ export class QuotationsService {
     return resQuotation;
   }
 
-  async updateQuotation(id: number, appId: number, attrs: Partial<UpdateQuotationDto>) {
+  async updateQuotation(id: string, appId: number, attrs: Partial<UpdateQuotationDto>) {
     const quotation = await this.findOneByApplication(id, appId);
 
     if (!quotation) {
@@ -130,7 +130,7 @@ export class QuotationsService {
     }
     const quotations = this.repo.find({
       where: { application: { id: appId } },
-      relations: ['productToQuotation', 'productToQuotation.product', 'customer', 'order'],
+      relations: ['productToQuotation', 'productToQuotation.product', 'customer', 'order', 'createdBy'],
       order: { quotationDate: 'ASC' },
     });
     if (!quotations) {
@@ -160,7 +160,7 @@ export class QuotationsService {
     return quotations;
   }
 
-  async findOneByApplication(id: number, appId: number) {
+  async findOneByApplication(id: string, appId: number) {
     if (!id || !appId) {
       return null;
     }
@@ -182,7 +182,7 @@ export class QuotationsService {
     return quotation;
   }
 
-  findOne(id: number) {
+  findOne(id: string) {
     if (!id) {
       return null;
     }
@@ -190,13 +190,13 @@ export class QuotationsService {
     return quotation;
   }
 
-  async update(id: number, appId: number, attrs: Partial<UpdateQuotationDto>) {
+  async update(id: string, appId: number, attrs: Partial<UpdateQuotationDto>) {
     const quotation = await this.findOneByApplication(id, appId);
     Object.assign(quotation, attrs);
     return this.repo.save(quotation);
   }
 
-  async approveAndCreateOrder(quotationId: number, userId: number, appId: number) {
+  async approveAndCreateOrder(quotationId: string, userId: number, appId: number) {
     const quotation = await this.findOneByApplication(quotationId, appId);
     if (quotation) {
       const order = new CreateOrderDto();
@@ -222,7 +222,7 @@ export class QuotationsService {
     }
   }
 
-  async remove(id: number, appId: number) {
+  async remove(id: string, appId: number) {
     if (!id || !appId) {
       return null;
     }

@@ -19,7 +19,7 @@ export class CreateTicketDto {
   @IsOptional()
   mentions: any;
 
-  @IsNumber()
+  @IsString()
   @IsOptional()
-  quotationId: number;
+  quotationId: string;
 }

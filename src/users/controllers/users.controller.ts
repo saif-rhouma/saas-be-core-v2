@@ -88,7 +88,7 @@ export class UsersController {
   @Delete('/staff/:id')
   removeStaff(@Param('id') id: string, @GetUser() user: Partial<User>) {
     const appId = getApplicationId(user);
-    return this.usersService.removeStaff(parseInt(id), appId);
+    return this.usersService.removeStaff(parseInt(id), appId, user.id);
   }
 
   @Serialize(StaffListDto)

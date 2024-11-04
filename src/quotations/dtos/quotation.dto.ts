@@ -3,7 +3,7 @@ import { Expose, Transform } from 'class-transformer';
 
 export class QuotationDto {
   @Expose()
-  id: number;
+  id: string;
 
   @Expose()
   name: string;
@@ -16,8 +16,8 @@ export class QuotationDto {
 
   @Expose()
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  @Transform(({ value, obj }) => obj.customer.id)
-  customer: number;
+  @Transform(({ value, obj }) => obj?.customer)
+  customer;
 
   @Expose()
   status: string;
@@ -36,8 +36,10 @@ export class QuotationDto {
 
   @Expose()
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  @Transform(({ value, obj }) => obj.createdBy.id)
-  createdBy: number;
+  @Transform(({ value, obj }) => {
+    return { id: obj.createdBy.id, firstName: obj.createdBy.firstName, lastName: obj.createdBy.lastName };
+  })
+  createdBy: any;
 
   @Expose()
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -47,4 +49,19 @@ export class QuotationDto {
     } catch (error) {}
   })
   products: any[];
+
+  @Expose()
+  order;
+
+  @Expose()
+  totalAmount;
+
+  @Expose()
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  @Transform(({ value, obj }) => {
+    try {
+      return obj.productToQuotation.map((product) => product);
+    } catch (error) {}
+  })
+  productToQuotation;
 }

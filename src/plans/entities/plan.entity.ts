@@ -4,15 +4,7 @@ import { Order } from 'src/orders/entities/order.entity';
 import { Product } from 'src/products/entities/product.entity';
 import { Supplying } from 'src/stock/entities/supplying.entity';
 import { User } from 'src/users/entities/user.entity';
-import {
-  Column,
-  CreateDateColumn,
-  Entity,
-  ManyToOne,
-  OneToOne,
-  PrimaryGeneratedColumn,
-  UpdateDateColumn,
-} from 'typeorm';
+import { Column, CreateDateColumn, Entity, ManyToOne, OneToOne, PrimaryColumn, UpdateDateColumn } from 'typeorm';
 
 export enum PlanStatus {
   Waiting = 'Waiting',
@@ -24,8 +16,10 @@ export enum PlanStatus {
 
 @Entity()
 export class Plan {
-  @PrimaryGeneratedColumn()
-  id: number;
+  @PrimaryColumn('varchar', {
+    length: 250,
+  })
+  id: string;
 
   @Column({ nullable: true })
   ref: string;

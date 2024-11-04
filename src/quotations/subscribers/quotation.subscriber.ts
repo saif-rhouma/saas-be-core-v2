@@ -4,6 +4,7 @@ import { Inject } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { generateCodeName } from 'src/common/helpers/generateCodeName';
 import { Quotation } from '../entities/quotation.entity';
+import { randomUUID } from 'crypto';
 
 @EventSubscriber()
 export class QuotationSubscriber implements EntitySubscriberInterface<Quotation> {
@@ -28,5 +29,6 @@ export class QuotationSubscriber implements EntitySubscriberInterface<Quotation>
       event.entity.name = `${event.entity.ref} : Quotation For Client ${event.entity.customer.name}`;
     }
     event.entity.snapshotTaxPercentage = event.entity.application.taxPercentage;
+    event.entity.id = randomUUID();
   }
 }

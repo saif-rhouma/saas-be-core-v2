@@ -119,7 +119,7 @@ export class OrdersService {
     return orders;
   }
 
-  async findOneByApplication(id: number, appId: number) {
+  async findOneByApplication(id: string, appId: number) {
     if (!id || !appId) {
       return null;
     }
@@ -133,7 +133,7 @@ export class OrdersService {
     return order;
   }
 
-  async findOneByApplicationDetailed(id: number, appId: number) {
+  async findOneByApplicationDetailed(id: string, appId: number) {
     if (!id || !appId) {
       return null;
     }
@@ -147,7 +147,7 @@ export class OrdersService {
     return order;
   }
 
-  findOne(id: number) {
+  findOne(id: string) {
     if (!id) {
       return null;
     }
@@ -155,7 +155,7 @@ export class OrdersService {
     return order;
   }
 
-  async update(id: number, appId: number, attrs: Partial<UpdateOrderDto>) {
+  async update(id: string, appId: number, attrs: Partial<UpdateOrderDto>) {
     const order = await this.findOneByApplication(id, appId);
     Object.assign(order, attrs);
     return this.repo.save(order);
@@ -173,13 +173,13 @@ export class OrdersService {
     return this.update(orderId, appId, { status: OrderStatus.InProcess });
   }
 
-  async detailsApprove(id: number, appId: number) {
+  async detailsApprove(id: string, appId: number) {
     const order = await this.findOneByApplicationDetailed(id, appId);
     // const ProductList
     return order;
   }
 
-  async updateStatus(id: number, appId: number, attrs: Partial<UpdateOrderDto>) {
+  async updateStatus(id: string, appId: number, attrs: Partial<UpdateOrderDto>) {
     const order = await this.findOneByApplication(id, appId);
     const prevStatus = order.status;
     Object.assign(order, attrs);
@@ -205,7 +205,7 @@ export class OrdersService {
   //   return this.repo.remove(order);
   // }
 
-  async remove(id: number, appId: number) {
+  async remove(id: string, appId: number) {
     if (!id || !appId) {
       return null;
     }
