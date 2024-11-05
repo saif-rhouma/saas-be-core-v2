@@ -93,6 +93,7 @@ export class OrdersService {
     // });
     const orders = await this.repo
       .createQueryBuilder('order')
+      .leftJoinAndSelect('order.createdBy', 'user')
       .leftJoinAndSelect('order.productToOrder', 'productToOrder')
       .leftJoinAndSelect('productToOrder.product', 'product')
       .leftJoinAndSelect('order.customer', 'customer')
