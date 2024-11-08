@@ -56,6 +56,7 @@ export class CustomersService {
     }
     const customer = await this.repo.findOne({
       where: { id, application: { id: appId } },
+      relations: { orders: true },
     });
     if (!customer) {
       throw new NotFoundException(MSG_EXCEPTION.NOT_FOUND_CUSTOMER);
