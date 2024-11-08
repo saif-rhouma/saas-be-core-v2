@@ -152,6 +152,24 @@ export class ProductService {
     return this.repo.save(product);
   }
 
+  async topProducts(appId: number) {
+    if (!appId) {
+      return null;
+    }
+
+    const analytics = await this.repo.manager.query(`
+      SELECT p.*, SUM(op.quantity) AS total_quantity
+      FROM product p
+      LEFT JOIN product_to_order op ON p.id = op.productId 
+      LEFT JOIN "order" o ON op.orderId = o.id
+      LEFT JOIN application s ON o.applicationId = s.id
+      WHERE s.id = ${appId}
+      GROUP BY p.id, p.name 
+      ORDER BY total_quantity DESC;`);
+
+    return analytics;
+  }
+
   async topFiveProducts(appId: number) {
     if (!appId) {
       return null;

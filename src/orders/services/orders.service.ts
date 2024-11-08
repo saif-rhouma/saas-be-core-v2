@@ -151,10 +151,33 @@ export class OrdersService {
     return orders;
   }
 
-  findAllActiveByApplication(appId: number) {
+  async findAllActiveByApplication(userId: number, appId: number) {
     if (!appId || isNaN(appId)) {
       return null;
     }
+
+    const user = await this.usersService.getDetails(userId);
+
+    if (user.roles.map((role) => role.name).includes(RoleType.STAFF)) {
+      // TODO PermissionType.LIST_ORDER SHOULD BE CHANGED !!!
+      if (!user.permissions.map((permission) => permission.slug).includes(PermissionType.GROUP_ORDER_LIST)) {
+        const orders = await this.repo
+          .createQueryBuilder('order')
+          .leftJoinAndSelect('order.productToOrder', 'productToOrder')
+          .leftJoinAndSelect('productToOrder.product', 'product')
+          .leftJoinAndSelect('order.customer', 'customer')
+          .where('order.status != :status', { status: OrderStatus.Draft })
+          .andWhere('order.applicationId = :appId', { appId })
+          .andWhere('order.createdBy = :userId', { userId })
+          .getMany();
+
+        if (!orders) {
+          throw new NotFoundException(MSG_EXCEPTION.NOT_FOUND_ORDER);
+        }
+        return orders;
+      }
+    }
+
     const orders = this.repo.find({
       where: { status: Not(OrderStatus.Draft), application: { id: appId } },
       relations: ['productToOrder', 'productToOrder.product', 'customer'],

@@ -18,7 +18,7 @@ export class OrdersStatusController {
   @Get()
   async findAll(@GetUser() user: Partial<User>) {
     const appId = getApplicationId(user);
-    const orders = await this.ordersService.findAllActiveByApplication(appId);
+    const orders = await this.ordersService.findAllActiveByApplication(user.id, appId);
     if (!orders) {
       throw new NotFoundException(MSG_EXCEPTION.NOT_FOUND_ORDER);
     }

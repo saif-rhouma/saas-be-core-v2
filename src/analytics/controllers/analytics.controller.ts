@@ -25,4 +25,12 @@ export class AnalyticsController {
 
     return { orders, products, customers };
   }
+
+  @UseGuards(AuthenticationGuard)
+  @Get('/products')
+  async topProducts(@GetUser() user: Partial<User>) {
+    const appId = getApplicationId(user);
+    const products = await this.productsService.topProducts(appId);
+    return products;
+  }
 }
