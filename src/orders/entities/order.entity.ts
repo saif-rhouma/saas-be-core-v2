@@ -4,8 +4,18 @@ import { Customer } from 'src/customers/entities/customer.entity';
 import { Payment } from 'src/payments/entities/payment.entity';
 import { Plan } from 'src/plans/entities/plan.entity';
 import { User } from 'src/users/entities/user.entity';
-import { Column, CreateDateColumn, Entity, ManyToOne, OneToMany, PrimaryColumn, UpdateDateColumn } from 'typeorm';
+import {
+  Column,
+  CreateDateColumn,
+  Entity,
+  ManyToOne,
+  OneToMany,
+  OneToOne,
+  PrimaryColumn,
+  UpdateDateColumn,
+} from 'typeorm';
 import { ProductToOrder } from './product_order.entity';
+import { Quotation } from 'src/quotations/entities/quotation.entity';
 
 export enum OrderStatus {
   Canceled = 'Canceled',
@@ -85,6 +95,9 @@ export class Order {
 
   @OneToMany(() => Payment, (payment) => payment.order)
   payments: Payment[];
+
+  @OneToOne(() => Quotation, (quotation) => quotation.order)
+  quotation: Quotation;
 
   @CreateDateColumn()
   createTime: Date;

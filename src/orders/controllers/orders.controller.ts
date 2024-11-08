@@ -30,7 +30,8 @@ export class OrdersController {
   @Get()
   async findAll(@GetUser() user: Partial<User>) {
     const appId = getApplicationId(user);
-    const orders = await this.ordersService.findAllByApplication(appId);
+    // const orders = await this.ordersService.findAllByApplication(appId);
+    const orders = await this.ordersService.findAllByApplicationAdvanced(user.id, appId);
     return orders;
   }
 

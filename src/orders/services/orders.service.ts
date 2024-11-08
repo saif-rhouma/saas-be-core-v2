@@ -3,8 +3,13 @@ import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ApplicationsService } from 'src/applications/services/applications.service';
 import { MSG_EXCEPTION } from 'src/common/constants/messages';
+import { PermissionType } from 'src/common/constants/permissions';
+import { RoleType } from 'src/common/constants/roles';
 import { CustomersService } from 'src/customers/services/customers.service';
+import { Plan } from 'src/plans/entities/plan.entity';
+import { PlansService } from 'src/plans/services/plans.service';
 import { ProductService } from 'src/products/services/products.service';
+import { Operation, StockService } from 'src/stock/services/stock.service';
 import { UsersService } from 'src/users/services/users.service';
 import { Not, Repository } from 'typeorm';
 import { Logger } from 'winston';
@@ -12,9 +17,6 @@ import { CreateOrderDto } from '../dtos/create-order.dto';
 import { UpdateOrderDto } from '../dtos/update-order.dto';
 import { Order, OrderStatus } from '../entities/order.entity';
 import { ProductOrderService } from './product-order.service';
-import { Operation, StockService } from 'src/stock/services/stock.service';
-import { PlansService } from 'src/plans/services/plans.service';
-import { Plan } from 'src/plans/entities/plan.entity';
 
 @Injectable()
 export class OrdersService {
@@ -106,6 +108,49 @@ export class OrdersService {
     return orders;
   }
 
+  async findAllByApplicationAdvanced(userId: number, appId: number) {
+    if (!appId || isNaN(appId)) {
+      return null;
+    }
+
+    const user = await this.usersService.getDetails(userId);
+
+    if (user.roles.map((role) => role.name).includes(RoleType.STAFF)) {
+      // TODO PermissionType.LIST_ORDER SHOULD BE CHANGED !!!
+      if (!user.permissions.map((permission) => permission.slug).includes(PermissionType.GROUP_ORDER_LIST)) {
+        const orders = await this.repo
+          .createQueryBuilder('order')
+          .leftJoinAndSelect('order.createdBy', 'user')
+          .leftJoinAndSelect('order.productToOrder', 'productToOrder')
+          .leftJoinAndSelect('productToOrder.product', 'product')
+          .leftJoinAndSelect('order.customer', 'customer')
+          .where('order.applicationId = :appId', { appId })
+          .andWhere('order.createdBy = :userId', { userId })
+          .orderBy('CAST(SUBSTRING(order.ref, 4, LENGTH(order.ref)) AS UNSIGNED)', 'ASC')
+          .getMany();
+        if (!orders) {
+          throw new NotFoundException(MSG_EXCEPTION.NOT_FOUND_ORDER);
+        }
+        return orders;
+      }
+    }
+
+    const orders = await this.repo
+      .createQueryBuilder('order')
+      .leftJoinAndSelect('order.createdBy', 'user')
+      .leftJoinAndSelect('order.productToOrder', 'productToOrder')
+      .leftJoinAndSelect('productToOrder.product', 'product')
+      .leftJoinAndSelect('order.customer', 'customer')
+      .where('order.applicationId = :appId', { appId })
+      .orderBy('CAST(SUBSTRING(order.ref, 4, LENGTH(order.ref)) AS UNSIGNED)', 'ASC')
+      .getMany();
+
+    if (!orders) {
+      throw new NotFoundException(MSG_EXCEPTION.NOT_FOUND_ORDER);
+    }
+    return orders;
+  }
+
   findAllActiveByApplication(appId: number) {
     if (!appId || isNaN(appId)) {
       return null;
@@ -126,7 +171,7 @@ export class OrdersService {
     }
     const order = await this.repo.findOne({
       where: { id, application: { id: appId } },
-      relations: ['productToOrder', 'productToOrder.product', 'customer', 'payments', 'application'],
+      relations: ['productToOrder', 'productToOrder.product', 'customer', 'payments', 'application', 'quotation'],
     });
     if (!order) {
       throw new NotFoundException(MSG_EXCEPTION.NOT_FOUND_ORDER);

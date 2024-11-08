@@ -351,4 +351,19 @@ export class UsersService {
 
     return userWithPermission;
   }
+  async getDetails(id: number) {
+    const user = await this.repo.findOne({
+      where: { id },
+      relations: ['permissions', 'groups', 'roles'],
+    });
+    return user;
+  }
+
+  async getAllUserRoles(id: number) {
+    const user = await this.repo.findOne({
+      where: { id },
+      relations: ['permissions', 'groups', 'roles'],
+    });
+    return user.roles;
+  }
 }

@@ -13,6 +13,8 @@ import { MSG_EXCEPTION } from 'src/common/constants/messages';
 import { UpdateQuotationDto } from '../dtos/update-quotation.dto';
 import { OrdersService } from 'src/orders/services/orders.service';
 import { CreateOrderDto, ProductQty } from 'src/orders/dtos/create-order.dto';
+import { RoleType } from 'src/common/constants/roles';
+import { PermissionType } from 'src/common/constants/permissions';
 
 @Injectable()
 export class QuotationsService {
@@ -151,6 +153,51 @@ export class QuotationsService {
     return quotations;
   }
 
+  async findAllByApplicationAdvance(userId: number, appId: number) {
+    if (!appId || isNaN(appId)) {
+      return null;
+    }
+
+    const user = await this.usersService.getDetails(userId);
+
+    if (user.roles.map((role) => role.name).includes(RoleType.STAFF)) {
+      // TODO PermissionType.LIST_ORDER SHOULD BE CHANGED !!!
+      if (!user.permissions.map((permission) => permission.slug).includes(PermissionType.GROUP_QUOTATION_LIST)) {
+        const quotations = await this.repo
+          .createQueryBuilder('quotation')
+          .leftJoinAndSelect('quotation.createdBy', 'user')
+          .leftJoinAndSelect('quotation.productToQuotation', 'productToQuotation')
+          .leftJoinAndSelect('productToQuotation.product', 'product')
+          .leftJoinAndSelect('quotation.order', 'order')
+          .leftJoinAndSelect('quotation.customer', 'customer')
+          .where('quotation.applicationId = :appId', { appId })
+          .andWhere('quotation.createdBy = :userId', { userId })
+          .orderBy('CAST(SUBSTRING(quotation.ref, 4, LENGTH(quotation.ref)) AS UNSIGNED)', 'ASC')
+          .getMany();
+        if (!quotations) {
+          throw new NotFoundException(MSG_EXCEPTION.NOT_FOUND_QUOTATION);
+        }
+        return quotations;
+      }
+    }
+
+    const quotations = await this.repo
+      .createQueryBuilder('quotation')
+      .leftJoinAndSelect('quotation.createdBy', 'user')
+      .leftJoinAndSelect('quotation.productToQuotation', 'productToQuotation')
+      .leftJoinAndSelect('productToQuotation.product', 'product')
+      .leftJoinAndSelect('quotation.order', 'order')
+      .leftJoinAndSelect('quotation.customer', 'customer')
+      .where('quotation.applicationId = :appId', { appId })
+      .orderBy('CAST(SUBSTRING(quotation.ref, 4, LENGTH(quotation.ref)) AS UNSIGNED)', 'ASC')
+      .getMany();
+
+    if (!quotations) {
+      throw new NotFoundException(MSG_EXCEPTION.NOT_FOUND_QUOTATION);
+    }
+    return quotations;
+  }
+
   findAllActiveByApplication(appId: number) {
     if (!appId || isNaN(appId)) {
       return null;
@@ -186,6 +233,7 @@ export class QuotationsService {
         customer: true,
         reminders: true,
         tickets: true,
+        order: true,
       },
     });
     if (!quotation) {
@@ -210,7 +258,7 @@ export class QuotationsService {
 
   async approveAndCreateOrder(quotationId: string, userId: number, appId: number) {
     const quotation = await this.findOneByApplication(quotationId, appId);
-    if (quotation) {
+    if (quotation && !quotation.order) {
       const order = new CreateOrderDto();
 
       const productQty: ProductQty[] = [];

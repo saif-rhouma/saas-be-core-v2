@@ -35,7 +35,7 @@ export class QuotationsController {
   @Get()
   findAll(@GetUser() user: Partial<User>) {
     const appId = getApplicationId(user);
-    return this.quotationsService.findAllByApplication(appId);
+    return this.quotationsService.findAllByApplicationAdvance(user.id, appId);
   }
 
   @UseGuards(AuthenticationGuard)
