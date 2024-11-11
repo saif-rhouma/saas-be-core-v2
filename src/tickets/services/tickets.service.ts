@@ -108,13 +108,19 @@ export class TicketsService {
         'accountType', C.accountType,
         'avatar', C.avatar,
         'address', C.address
-    ) AS createdBy
+    ) AS createdBy,
+     -- CreatedBy details
+     JSON_OBJECT(
+        'id', Q.id,
+        'ref', Q.ref
+    ) AS quotation
       FROM ticket T
       LEFT JOIN application A ON T.applicationId = A.id        
       LEFT JOIN user C ON T.createdById = C.id                   
-      LEFT JOIN user M ON T.memberId = M.id                  
+      LEFT JOIN user M ON T.memberId = M.id
+      LEFT JOIN quotation Q ON T.quotationId = Q.id                  
       LEFT JOIN user_mentioned_in_ticket TM ON T.id = TM.ticketId 
-      LEFT JOIN user U ON TM.userId = U.id             
+      LEFT JOIN user U ON TM.userId = U.id                 
       WHERE A.id = ${appId}                               
         AND (C.id = ${userId}                                    
              OR M.id = ${userId}                               

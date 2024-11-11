@@ -203,7 +203,7 @@ export class QuotationsService {
       return null;
     }
     const quotations = this.repo.find({
-      where: { status: Not(QuotationStatus.Draft), application: { id: appId } },
+      where: { status: Not(QuotationStatus.Created), application: { id: appId } },
       relations: {
         application: true,
         productToQuotation: {

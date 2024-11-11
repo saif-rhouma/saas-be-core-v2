@@ -20,9 +20,9 @@ import { Ticket } from 'src/tickets/entities/ticket.entity';
 
 export enum QuotationStatus {
   Canceled = 'Canceled',
-  Draft = 'Draft',
-  InProcess = 'InProcess',
+  Created = 'Created',
   Confirmed = 'Confirmed',
+  Converted = 'Converted',
 }
 
 @Entity()
@@ -66,7 +66,7 @@ export class Quotation {
   })
   snapshotTaxPercentage: number;
 
-  @Column('text', { default: QuotationStatus.Draft })
+  @Column('text', { default: QuotationStatus.Created })
   status: QuotationStatus;
 
   @OneToMany(() => ProductToQuotation, (productToQuotation) => productToQuotation.quotation)

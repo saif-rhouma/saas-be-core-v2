@@ -19,6 +19,7 @@ export class Reminder {
 
   @Column({
     nullable: true,
+    type: 'text',
   })
   description: string;
 

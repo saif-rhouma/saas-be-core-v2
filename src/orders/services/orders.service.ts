@@ -194,7 +194,15 @@ export class OrdersService {
     }
     const order = await this.repo.findOne({
       where: { id, application: { id: appId } },
-      relations: ['productToOrder', 'productToOrder.product', 'customer', 'payments', 'application', 'quotation'],
+      relations: [
+        'productToOrder',
+        'productToOrder.product',
+        'customer',
+        'payments',
+        'application',
+        'quotation',
+        'createdBy',
+      ],
     });
     if (!order) {
       throw new NotFoundException(MSG_EXCEPTION.NOT_FOUND_ORDER);
@@ -208,7 +216,7 @@ export class OrdersService {
     }
     const order = await this.repo.findOne({
       where: { id, application: { id: appId } },
-      relations: ['productToOrder', 'productToOrder.product.stock'],
+      relations: ['productToOrder', 'productToOrder.product.stock', 'createdBy'],
     });
     if (!order) {
       throw new NotFoundException(MSG_EXCEPTION.NOT_FOUND_ORDER);

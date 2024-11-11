@@ -37,6 +37,7 @@ export class Ticket {
 
   @Column({
     nullable: true,
+    type: 'text',
   })
   description: string;
 

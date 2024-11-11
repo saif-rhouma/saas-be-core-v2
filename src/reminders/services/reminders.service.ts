@@ -51,6 +51,7 @@ export class RemindersService {
     }
     const reminders = this.repo.find({
       where: { application: { id: appId } },
+      relations: { quotation: true },
     });
     if (!reminders) {
       throw new NotFoundException(MSG_EXCEPTION.NOT_FOUND_REMINDER);
