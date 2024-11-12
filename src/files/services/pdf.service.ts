@@ -7,6 +7,7 @@ export class PdfService {
   async generatePdf(htmlContent: string, outputFilePath: string): Promise<string> {
     return new Promise((resolve, reject) => {
       const options = {
+        phantomPath: './node_modules/phantomjs/bin/phantomjs',
         format: 'A4',
         orientation: 'portrait',
         border: '10mm',
