@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { QuotationsController } from './controllers/quotations.controller';
 import { QuotationsService } from './services/quotations.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
@@ -16,6 +16,8 @@ import { ApplicationsModule } from 'src/applications/applications.module';
 import { OrdersModule } from 'src/orders/orders.module';
 import { QuotationSubscriber } from './subscribers/quotation.subscriber';
 import { ProductQuotationService } from './services/product-quotation.service';
+import { FilesModule } from 'src/files/files.module';
+import { NotificationsModule } from 'src/notifications/notifications.module';
 
 @Module({
   controllers: [QuotationsController],
@@ -27,6 +29,8 @@ import { ProductQuotationService } from './services/product-quotation.service';
     ApplicationsModule,
     OrdersModule,
     TypeOrmModule.forFeature([User, Application, Customer, Product, Order, ProductToQuotation, Quotation]),
+    FilesModule,
+    forwardRef(() => NotificationsModule),
   ],
   exports: [QuotationsService],
 })

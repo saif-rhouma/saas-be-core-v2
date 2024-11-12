@@ -21,10 +21,15 @@ import { AuthenticationGuard } from 'src/common/guards/authentication.guard';
 import { User } from 'src/users/entities/user.entity';
 import { GetUser } from 'src/common/decorators/getUser.decorator';
 import getApplicationId from 'src/common/helpers/application-id.func';
-
+import * as path from 'path';
+import { Response as ResExp } from 'express';
+import { PdfService } from '../services/pdf.service';
 @Controller('files')
 export class FilesController {
-  constructor(private filesService: FilesService) {}
+  constructor(
+    private filesService: FilesService,
+    private pdfService: PdfService,
+  ) {}
 
   @UseGuards(AuthenticationGuard)
   @Post('/upload')
@@ -75,5 +80,24 @@ export class FilesController {
   streamable(@Res({ passthrough: true }) response: Response, @Param('fileName') fileName: string) {
     const file = this.filesService.fileStream(fileName);
     return new StreamableFile(file);
+  }
+
+  @Post('generate')
+  async generatePdf(@Body('html') html: string, @Res() res: ResExp) {
+    try {
+      const outputPath = path.join(process.cwd(), 'public', 'test.pdf');
+      await this.pdfService.generatePdf(html, outputPath);
+
+      // Send the generated PDF as a response
+      res.sendFile(outputPath, (err) => {
+        if (err) {
+          res.status(500).send({ message: 'Could not send the file.' });
+        }
+        // Optional: Delete the file after sending
+        // fs.unlinkSync(outputPath);
+      });
+    } catch (error) {
+      res.status(500).send({ message: 'Error generating PDF', error });
+    }
   }
 }

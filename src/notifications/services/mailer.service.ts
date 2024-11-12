@@ -23,7 +23,7 @@ export class MailerService {
     return transporter;
   }
   async sendEmail(data: Partial<SendEmailDto>) {
-    const { from, recipients, subject, html } = data;
+    const { from, recipients, subject, html, cc } = data;
 
     const transporter = this.mailTransport();
     const options: Mail.Options = {
@@ -32,6 +32,7 @@ export class MailerService {
         address: this.config.get<string>('DEFAULT_MAIL_FROM'),
       },
       to: recipients,
+      cc,
       subject,
       html,
     };

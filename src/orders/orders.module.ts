@@ -19,6 +19,7 @@ import { OrdersStatusController } from './controllers/orders-status.controller';
 import { StockModule } from 'src/stock/stock.module';
 import { PlansModule } from 'src/plans/plans.module';
 import { OrderSubscriber } from './subscribers/order.subscriber';
+import { FilesModule } from 'src/files/files.module';
 
 @Module({
   controllers: [OrdersController, OrdersStatusController],
@@ -31,6 +32,7 @@ import { OrderSubscriber } from './subscribers/order.subscriber';
     PlansModule,
     StockModule,
     TypeOrmModule.forFeature([Plan, User, Application, Customer, Product, Order, ProductToOrder]),
+    FilesModule,
   ],
   exports: [OrdersService],
 })

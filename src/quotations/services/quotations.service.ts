@@ -250,6 +250,27 @@ export class QuotationsService {
     return quotation;
   }
 
+  async findPdf(id: string) {
+    if (!id) {
+      return null;
+    }
+    const quotation = await this.repo.findOne({
+      where: { id },
+      relations: {
+        application: true,
+        productToQuotation: {
+          product: true,
+        },
+        customer: true,
+        order: true,
+      },
+    });
+    if (!quotation) {
+      throw new NotFoundException(MSG_EXCEPTION.NOT_FOUND_QUOTATION);
+    }
+    return quotation;
+  }
+
   async update(id: string, appId: number, attrs: Partial<UpdateQuotationDto>) {
     const quotation = await this.findOneByApplication(id, appId);
     Object.assign(quotation, attrs);
@@ -278,7 +299,7 @@ export class QuotationsService {
       order.products = productQty;
 
       const orderRes = await this.ordersService.createOrder(order, userId, appId);
-      return this.update(quotationId, appId, { status: QuotationStatus.Confirmed, order: orderRes });
+      return this.update(quotationId, appId, { status: QuotationStatus.Converted, order: orderRes });
     }
   }
 

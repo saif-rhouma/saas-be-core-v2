@@ -1,5 +1,5 @@
 /* eslint-disable prettier/prettier */
-import { Body, Controller, Delete, Get, Param, Patch, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch, Post, Res, UseGuards } from '@nestjs/common';
 import { GetUser } from 'src/common/decorators/getUser.decorator';
 import { AuthenticationGuard } from 'src/common/guards/authentication.guard';
 import getApplicationId from 'src/common/helpers/application-id.func';
@@ -13,10 +13,16 @@ import { OrdersService } from '../services/orders.service';
 // import { RoleType } from 'src/common/constants/roles';
 // import { AuthorizationGuard } from 'src/common/guards/authorization.guard';
 import { OrderStatus } from '../entities/order.entity';
-
+import { PdfService } from 'src/files/services/pdf.service';
+import * as path from 'path';
+import { Response as ResExp } from 'express';
+import { HtmlOrder } from 'src/common/pdf-templates/order.pdf.template';
 @Controller('orders')
 export class OrdersController {
-  constructor(private ordersService: OrdersService) {}
+  constructor(
+    private ordersService: OrdersService,
+    private pdfService: PdfService,
+  ) {}
 
   @Serialize(OrderDto)
   @UseGuards(AuthenticationGuard)
@@ -41,6 +47,26 @@ export class OrdersController {
     const appId = getApplicationId(user);
     const orders = await this.ordersService.updateNullRefs(appId);
     return orders;
+  }
+
+  @Get('/pdf/:id')
+  async pdfOrder(@Param('id') id: string, @Res() res: ResExp) {
+    try {
+      const order = await this.ordersService.findPdf(id);
+      const outputPath = path.join(process.cwd(), 'public', `${order.ref}.pdf`);
+
+      const quotationHtml = HtmlOrder(order);
+
+      await this.pdfService.generatePdf(quotationHtml, outputPath);
+      // Send the generated PDF as a response
+      res.sendFile(outputPath, (err) => {
+        if (err) {
+          res.status(500).send({ message: 'Could not send the file.' });
+        }
+      });
+    } catch (error) {
+      res.status(500).send({ message: 'Error generating PDF', error });
+    }
   }
 
   @UseGuards(AuthenticationGuard)

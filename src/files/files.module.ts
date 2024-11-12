@@ -6,6 +6,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { File } from './entities/file.entity';
 import { UsersModule } from 'src/users/users.module';
 import { ApplicationsModule } from 'src/applications/applications.module';
+import { PdfService } from './services/pdf.service';
 
 @Module({
   imports: [
@@ -14,7 +15,8 @@ import { ApplicationsModule } from 'src/applications/applications.module';
     MulterModule.register({ dest: './uploads' }),
     TypeOrmModule.forFeature([File]),
   ],
-  providers: [FilesService],
+  providers: [FilesService, PdfService],
   controllers: [FilesController],
+  exports: [PdfService],
 })
 export class FilesModule {}

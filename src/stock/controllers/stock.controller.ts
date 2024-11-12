@@ -37,7 +37,6 @@ export class StockController {
   async createStock(@Body() stockData: CreateStockDto, @GetUser() user: Partial<User>) {
     const appId = getApplicationId(user);
     return this.stocksService.createStock(stockData, appId);
-    return 'OK';
   }
 
   @UseGuards(AuthenticationGuard)

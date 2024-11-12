@@ -5,12 +5,16 @@ import { NotificationsGateway } from 'src/notifications/gateway/notifications.ga
 import { DataSource, EntitySubscriberInterface, EventSubscriber, InsertEvent, UpdateEvent } from 'typeorm';
 import { Ticket, TicketStatus } from '../entities/ticket.entity';
 import { deleteKeysFromObj } from 'src/common/helpers/delete-keys-obj';
+import { MailerService } from 'src/notifications/services/mailer.service';
+import { SendEmailDto } from 'src/notifications/dtos/send-mail.dto';
+import { getHtmlString } from 'src/common/constants/mail-html-template';
 
 @EventSubscriber()
 export class TicketSubscriber implements EntitySubscriberInterface<Ticket> {
   constructor(
     @Inject(DataSource) dataSource: DataSource,
     private readonly notificationGateway: NotificationsGateway,
+    private readonly mailerService: MailerService,
   ) {
     dataSource.subscribers.push(this);
   }
@@ -43,6 +47,28 @@ export class TicketSubscriber implements EntitySubscriberInterface<Ticket> {
       NotificationType.TICKET,
       ticket,
     );
+    this.sendEmailToClient(ticket);
+  }
+
+  async sendEmailToClient(ticket: Ticket) {
+    try {
+      const mail: Partial<SendEmailDto> = {
+        from: {
+          name: ticket.application.name,
+          address: 'test@saascore.com',
+        },
+        recipients: {
+          name: ticket.member.firstName,
+          address: ticket.member.email,
+        },
+        subject: ticket.topic,
+        cc: ticket.mentions.map((user) => ({ name: user.firstName, address: user.email })),
+        html: getHtmlString(ticket.topic, ticket.description, 'Ticket', ticket.application.appLogo),
+      };
+      return this.mailerService.sendEmail(mail);
+    } catch (error) {
+      console.log(error);
+    }
   }
 
   async handleTicketClosed(ticket) {

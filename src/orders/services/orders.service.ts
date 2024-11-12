@@ -210,6 +210,27 @@ export class OrdersService {
     return order;
   }
 
+  async findPdf(id: string) {
+    if (!id) {
+      return null;
+    }
+    const order = await this.repo.findOne({
+      where: { id },
+      relations: {
+        application: true,
+        productToOrder: {
+          product: true,
+        },
+        customer: true,
+        quotation: true,
+      },
+    });
+    if (!order) {
+      throw new NotFoundException(MSG_EXCEPTION.NOT_FOUND_ORDER);
+    }
+    return order;
+  }
+
   async findOneByApplicationDetailed(id: string, appId: number) {
     if (!id || !appId) {
       return null;

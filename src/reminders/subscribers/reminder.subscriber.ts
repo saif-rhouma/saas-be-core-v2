@@ -109,7 +109,7 @@ export class ReminderSubscriber implements EntitySubscriberInterface<Reminder> {
           address: reminder.createdBy.email,
         },
         subject: reminder.title,
-        html: getHtmlString(reminder.title, reminder.description),
+        html: getHtmlString(reminder.title, reminder.description, 'Reminder', reminder.application.appLogo),
       };
       return this.mailerService.sendEmail(mail);
     } catch (error) {
