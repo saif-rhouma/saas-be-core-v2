@@ -65,7 +65,7 @@ export class QuotationsController {
   async sendQuotationToClient(@Body() payload: ShareQuotationDto, @GetUser() user: Partial<User>) {
     const appId = getApplicationId(user);
     const quotation = await this.quotationsService.findOneByApplication(payload.id, appId);
-    const url = `${CURRENT_SERVER}/quotations/pdf/${quotation.id}`;
+    const url = `${CURRENT_SERVER}/api/quotations/pdf/${quotation.id}`;
     try {
       const mail: Partial<SendEmailDto> = {
         from: {
