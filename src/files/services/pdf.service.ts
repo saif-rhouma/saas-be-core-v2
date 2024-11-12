@@ -18,7 +18,9 @@ export class PdfService {
   // }
 
   async generatePdf(htmlContent: string, outputFilePath: string): Promise<string> {
-    const browser = await puppeteer.launch();
+    const browser = await puppeteer.launch({
+      executablePath: '/usr/bin/chromium-browser',
+    });
     const page = await browser.newPage();
 
     // Set the content of the page to the provided HTML
