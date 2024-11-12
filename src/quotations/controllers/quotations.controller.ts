@@ -98,15 +98,15 @@ export class QuotationsController {
 
       const quotationHtml = HtmlQuotation(quotation);
 
-      await this.pdfService.generatePdf(quotationHtml, outputPath);
-      // Send the generated PDF as a response
-      res.sendFile(outputPath, (err) => {
+      const pdfFilePath = await this.pdfService.generatePdf(quotationHtml, outputPath);
+
+      // // Send the generated PDF as a response
+      res.sendFile(pdfFilePath, (err) => {
         if (err) {
           res.status(500).send({ message: 'Could not send the file.' });
         }
       });
     } catch (error) {
-      console.log('--> error', error);
       res.status(500).send({ message: 'Error generating PDF', error });
     }
   }

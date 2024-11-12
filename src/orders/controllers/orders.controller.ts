@@ -57,9 +57,8 @@ export class OrdersController {
 
       const quotationHtml = HtmlOrder(order);
 
-      await this.pdfService.generatePdf(quotationHtml, outputPath);
-      // Send the generated PDF as a response
-      res.sendFile(outputPath, (err) => {
+      const pdfFilePath = await this.pdfService.generatePdf(quotationHtml, outputPath);
+      res.sendFile(pdfFilePath, (err) => {
         if (err) {
           res.status(500).send({ message: 'Could not send the file.' });
         }

@@ -85,17 +85,18 @@ export class FilesController {
   @Post('generate')
   async generatePdf(@Body('html') html: string, @Res() res: ResExp) {
     try {
-      const outputPath = path.join(process.cwd(), 'public', 'test.pdf');
-      await this.pdfService.generatePdf(html, outputPath);
-
+      // const outputPath = path.join(process.cwd(), 'public', 'test.pdf');
+      // const pdfBuffer = await this.pdfService.generatePdf(html);
+      // res.setHeader('Content-Type', 'application/pdf');
+      // res.send(pdfBuffer);
       // Send the generated PDF as a response
-      res.sendFile(outputPath, (err) => {
-        if (err) {
-          res.status(500).send({ message: 'Could not send the file.' });
-        }
-        // Optional: Delete the file after sending
-        // fs.unlinkSync(outputPath);
-      });
+      // res.sendFile(pdfBuffer, (err) => {
+      //   if (err) {
+      //     res.status(500).send({ message: 'Could not send the file.' });
+      //   }
+      //   // Optional: Delete the file after sending
+      //   // fs.unlinkSync(outputPath);
+      // });
     } catch (error) {
       res.status(500).send({ message: 'Error generating PDF', error });
     }
