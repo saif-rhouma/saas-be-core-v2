@@ -107,6 +107,7 @@ export class QuotationsController {
         }
       });
     } catch (error) {
+      console.log('--> err', error);
       res.status(500).send({ message: 'Error generating PDF', error });
     }
   }
