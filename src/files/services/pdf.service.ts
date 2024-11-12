@@ -21,6 +21,8 @@ export class PdfService {
     const browser = await puppeteer.launch({
       executablePath: '/usr/bin/chromium-browser',
       ignoreDefaultArgs: ['--disable-extensions'],
+      headless: true, // Ensures headless mode
+      args: ['--no-sandbox', '--disable-setuid-sandbox'],
     });
     const page = await browser.newPage();
 
