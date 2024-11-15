@@ -26,7 +26,8 @@ export class QuotationSubscriber implements EntitySubscriberInterface<Quotation>
   async beforeInsert(event: InsertEvent<Quotation>) {
     await generateCodeName(event.entity, this.quotationRepository, 'QTT');
     if (!event.entity.name) {
-      event.entity.name = `${event.entity.ref} : Quotation For Client ${event.entity.customer.name}`;
+      // event.entity.name = `${event.entity.ref} : Quotation For Client ${event.entity.customer.name}`;
+      event.entity.name = `${event.entity.ref}`;
     }
     event.entity.snapshotTaxPercentage = event.entity.application.taxPercentage;
     event.entity.id = randomUUID();

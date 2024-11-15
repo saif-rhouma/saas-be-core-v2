@@ -33,6 +33,7 @@ export class Payment {
 
   @Column({
     nullable: true,
+    type: 'text',
   })
   notes: string;
 

@@ -702,7 +702,7 @@ body {
         <tr>
           <td class="w-full align-top">
             <div style="display: flex; gap:20px; align-items: center">
-              <img src="${SERVER_FILE_HOST}${quotation.application.logo}" class="h-12" />
+              <img src="${SERVER_FILE_HOST}${quotation.application.appLogo}" class="h-12" />
               <span class="font-bold text-main" style="font-size:28px">${quotation.application.name}</span>
             </div>
           </td>

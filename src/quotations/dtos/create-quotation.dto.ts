@@ -13,6 +13,11 @@ export class CreateQuotationDto {
   @Type(() => Date)
   quotationDate: Date;
 
+  @IsOptional()
+  @IsDate()
+  @Type(() => Date)
+  expiredDate: Date;
+
   @IsNumber()
   customer: number;
 
