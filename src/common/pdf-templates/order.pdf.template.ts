@@ -720,8 +720,9 @@ body {
                     </td>
                     <td class="pl-4">
                       <div>
-                        <p class="whitespace-nowrap text-slate-400 text-right">Quotation #</p>
+                        <p class="whitespace-nowrap text-slate-400 text-right">Order #</p>
                         <p class="whitespace-nowrap font-bold text-main text-right">${order.ref}</p>
+                        <p class="whitespace-nowrap text-slate-400 text-right">Status: ${order.status}</p>
                       </div>
                     </td>
                   </tr>

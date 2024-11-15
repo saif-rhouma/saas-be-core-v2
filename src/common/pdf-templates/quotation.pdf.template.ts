@@ -722,6 +722,7 @@ body {
                       <div>
                         <p class="whitespace-nowrap text-slate-400 text-right">Quotation #</p>
                         <p class="whitespace-nowrap font-bold text-main text-right">${quotation.ref}</p>
+                        <p class="whitespace-nowrap text-slate-400 text-right">Status: ${quotation.status}</p>
                       </div>
                     </td>
                   </tr>
