@@ -1,3 +1,4 @@
+/* eslint-disable prettier/prettier */
 import { Type } from 'class-transformer';
 import { IsDate, IsEnum, IsNumber, IsOptional, IsString } from 'class-validator';
 import { PaymentType } from '../entities/payment.entity';

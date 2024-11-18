@@ -42,6 +42,17 @@ export class Payment {
   })
   attachments: string;
 
+  @Column({
+    nullable: true,
+    default: false,
+  })
+  isChanged: boolean;
+
+  @Column({
+    nullable: true,
+  })
+  amountBeforeChange: number;
+
   @ManyToOne(() => Customer, (customer) => customer.payments)
   customer: Customer;
 

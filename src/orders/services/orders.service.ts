@@ -329,14 +329,15 @@ export class OrdersService {
         `SELECT SUM(p.amount) as total
         FROM "order" o LEFT JOIN payment p 
         ON p.orderId = o.id
-        WHERE o.id = ${order.id};`,
+        WHERE o.id = '${order.id}';`,
       );
-
       if (total) {
         order.orderPaymentAmount = total;
         await this.repo.save(order);
       }
-    } catch (error) {}
+    } catch (error) {
+      console.log(error);
+    }
   }
 
   async analytics(appId: number) {

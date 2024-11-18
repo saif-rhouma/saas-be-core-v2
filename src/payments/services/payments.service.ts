@@ -94,7 +94,6 @@ export class PaymentsService {
       where: { id, application: { id: appId } },
       relations: { order: true, customer: true },
     });
-    console.log('---> payments', payment);
     if (!payment) {
       throw new NotFoundException(MSG_EXCEPTION.NOT_FOUND_PAYMENT);
     }
