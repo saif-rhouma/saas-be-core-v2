@@ -64,7 +64,6 @@ export class OrdersController {
         }
       });
     } catch (error) {
-      console.log('---> error', error);
       res.status(500).send({ message: 'Error generating PDF', error });
     }
   }
