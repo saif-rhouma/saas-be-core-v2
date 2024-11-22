@@ -557,11 +557,11 @@ border-right-width: 1px;
 }
 
 .border-main{
-border-color: #FFBC42;
+border-color: #686D76;
 }
 
 .bg-main{
-background-color: #FFBC42;
+background-color: #686D76;
 }
 
 .bg-slate-100{
@@ -657,7 +657,7 @@ font-style: italic;
 }
 
 .text-main{
-color: #FFBC42;
+color: #686D76;
 }
 
 .text-neutral-600{
@@ -857,9 +857,11 @@ body {
   </div>
 
   <div class="px-14 py-10 text-sm text-neutral-700">
-    <p class="text-main font-bold">Notes</p>
-    <p class="italic">Lorem ipsum is placeholder text commonly used in the graphic, print, and publishing industries
-      for previewing layouts and visual mockups.</p>
+    <p class="text-main font-bold">Terms & Conditions:</p>
+    <p class="italic">Delivery within 1/2 days from P.O. and advance payment.</p>
+    <p class="italic">Payment 100% advance and before delivery.</p>
+    <p class="italic">Delivery: Ex-factory.</p>
+    <p class="italic">Warranty: One year "Against Manufacturing defects".the warranty does not include preventive maintenance consumables, Warranty is limited to using original parts.</p>
     </dvi>
 
     <footer class="fixed bottom-0 left-0 bg-slate-100 w-full text-neutral-600 text-center text-xs py-3">
