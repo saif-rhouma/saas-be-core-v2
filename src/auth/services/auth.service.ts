@@ -70,7 +70,7 @@ export class AuthService {
   async generateUserTokens(user) {
     delete user.password;
     const accessToken = this.jwtService.sign({ user }, { expiresIn: '3d' });
-    const refreshToken = this.jwtService.sign({ user }, { secret: this.config.get<string>('REFRESH_TOKEN_SECRET') });
+    const refreshToken = this.jwtService.sign({ user }, { secret: this.config.get<string>('auth.refreshToken') });
     return { accessToken, refreshToken };
   }
 
@@ -84,7 +84,7 @@ export class AuthService {
       throw new UnauthorizedException();
     }
     const { user } = await this.jwtService.verify(refreshToken, {
-      secret: this.config.get<string>('REFRESH_TOKEN_SECRET'),
+      secret: this.config.get<string>('auth.refreshToken'),
     });
 
     const { accessToken } = await this.generateUserTokens(user);

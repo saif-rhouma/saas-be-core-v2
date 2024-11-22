@@ -50,12 +50,14 @@ import { PermissionsGroup } from './users/entities/permissions-group.entity';
 import { QuotationsModule } from './quotations/quotations.module';
 import { Quotation } from './quotations/entities/quotation.entity';
 import { ProductToQuotation } from './quotations/entities/product_quotation.entity';
-
+import configuration from './common/configs/config';
 @Module({
   imports: [
     ConfigModule.forRoot({
+      cache: true,
       isGlobal: true,
       envFilePath: `.env.${process.env.NODE_ENV}`,
+      load: [configuration],
     }),
     WinstonModule.forRoot({
       format: winston.format.combine(winston.format.timestamp(), winston.format.json()),
@@ -83,7 +85,7 @@ import { ProductToQuotation } from './quotations/entities/product_quotation.enti
       inject: [ConfigService],
       useFactory: (config: ConfigService) => {
         return {
-          secret: config.get<string>('ACCESS_TOKEN_SECRET'),
+          secret: config.get<string>('auth.accessToken'),
         };
       },
     }),
@@ -92,7 +94,7 @@ import { ProductToQuotation } from './quotations/entities/product_quotation.enti
       useFactory: (config: ConfigService) => {
         return {
           type: 'sqlite',
-          database: config.get<string>('DB_NAME'),
+          database: config.get<string>('database.dbName'),
           synchronize: true,
           entities: [
             User,

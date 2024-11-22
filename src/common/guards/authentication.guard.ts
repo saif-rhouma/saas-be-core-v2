@@ -19,7 +19,6 @@ export class AuthenticationGuard implements CanActivate {
       if (!token) {
         throw new UnauthorizedException(MSG_EXCEPTION.UNAUTHORIZED_TOKEN_NOT_FOUND);
       }
-
       const { user } = this.jwtService.verify(token, {
         secret: this.config.get<string>('ACCESS_TOKEN_SECRET'),
       });
