@@ -29,7 +29,10 @@ export class Product {
   })
   image: string;
 
-  @Column()
+  @Column({
+    nullable: true,
+    default: true,
+  })
   isActive: boolean;
 
   @Column({
