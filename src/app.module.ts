@@ -94,8 +94,13 @@ import configuration from './common/configs/config';
       useFactory: (config: ConfigService) => {
         return {
           type: 'sqlite',
+          // host: config.get('database.host'),
+          // port: config.get('database.port'),
+          // username: config.get('database.username'),
+          // password: config.get('database.password'),
           database: config.get<string>('database.dbName'),
           synchronize: true,
+          // logging: ['query', 'error'],
           entities: [
             User,
             RefreshToken,

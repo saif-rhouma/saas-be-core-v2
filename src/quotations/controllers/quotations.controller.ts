@@ -1,5 +1,5 @@
 /* eslint-disable prettier/prettier */
-import { Body, Controller, Delete, Get, HttpCode, Param, Patch, Post, Res, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpCode, Param, Patch, Post, Req, Res, UseGuards } from '@nestjs/common';
 import { GetUser } from 'src/common/decorators/getUser.decorator';
 import { AuthenticationGuard } from 'src/common/guards/authentication.guard';
 import getApplicationId from 'src/common/helpers/application-id.func';
@@ -10,12 +10,11 @@ import { QuotationDto } from '../dtos/quotation.dto';
 import { UpdateQuotationDto } from '../dtos/update-quotation.dto';
 import { QuotationsService } from '../services/quotations.service';
 import * as path from 'path';
-import { Response as ResExp } from 'express';
+import { Request as ReqExp, Response as ResExp } from 'express';
 import { PdfService } from 'src/files/services/pdf.service';
 import { HtmlQuotation } from 'src/common/pdf-templates/quotation.pdf.template';
 import { SendEmailDto } from 'src/notifications/dtos/send-mail.dto';
 import { getHtmlString } from 'src/common/constants/mail-html-template';
-import { CURRENT_SERVER } from 'src/common/constants/global';
 import { MailerService } from 'src/notifications/services/mailer.service';
 import { ShareQuotationDto } from '../dtos/share-quotation.dto';
 import { HTTP_CODE } from 'src/common/constants/http-status-code';
@@ -62,10 +61,11 @@ export class QuotationsController {
   @HttpCode(HTTP_CODE.NO_CONTENT)
   @UseGuards(AuthenticationGuard)
   @Post('/share')
-  async sendQuotationToClient(@Body() payload: ShareQuotationDto, @GetUser() user: Partial<User>) {
+  async sendQuotationToClient(@Body() payload: ShareQuotationDto, @GetUser() user: Partial<User>, @Req() req: ReqExp) {
     const appId = getApplicationId(user);
     const quotation = await this.quotationsService.findOneByApplication(payload.id, appId);
-    const url = `${CURRENT_SERVER}/api/quotations/pdf/${quotation.id}`;
+    const baseUrl = `${req.protocol}://${req.get('host')}`;
+    const url = `${baseUrl}/api/quotations/pdf/${quotation.id}`;
     try {
       const mail: Partial<SendEmailDto> = {
         from: {
