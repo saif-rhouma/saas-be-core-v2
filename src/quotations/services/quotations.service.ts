@@ -115,6 +115,7 @@ export class QuotationsService {
     });
 
     quotation.quotationDate = attrs.quotationDate;
+    quotation.expiredDate = attrs.expiredDate;
     quotation.customer = customer;
     quotation.discount = attrs.discount;
     quotation.name = attrs.name;
