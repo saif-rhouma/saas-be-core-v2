@@ -3,7 +3,7 @@ import * as dayjs from 'dayjs';
 import { calculateAfterTax, calculateTax, fCurrency } from '../helpers/format-number';
 import { SERVER_FILE_HOST } from '../constants/global';
 
-export const HtmlOrder = (order) => {
+export const HtmlOrder = (order, serverHostFile = null) => {
   return `
 <!DOCTYPE html>
 <html lang="en">
@@ -702,8 +702,8 @@ body {
         <tr>
           <td class="w-full align-top" style="position: relative">
             <div style="display: flex; gap:20px; align-items: center; object-fit: contain; position: absolute; width: 100%; height: 100%">
-              <img src="${SERVER_FILE_HOST}${order.application.appLogo}" class="h-12" style="height: 100%; object-fit: contain;" />
-              <span class="font-bold text-main" style="width: 100%; font-size:24px">${order.application.name}</span>
+              <img src="${serverHostFile || SERVER_FILE_HOST}${order.application.appLogo}" class="h-12" style="height: 100%; object-fit: contain;" />
+            <!--  <span class="font-bold text-main" style="width: 100%; font-size:24px">${order.application.name}</span> -->
             </div>
           </td>
 

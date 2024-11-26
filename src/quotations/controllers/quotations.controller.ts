@@ -91,12 +91,16 @@ export class QuotationsController {
   }
 
   @Get('/pdf/:id')
-  async pdfQuotation(@Param('id') id: string, @Res() res: ResExp) {
+  async pdfQuotation(@Param('id') id: string, @Res() res: ResExp, @Req() req: ReqExp) {
     try {
       const quotation = await this.quotationsService.findPdf(id);
       const outputPath = path.join(process.cwd(), 'public', `${quotation.ref}.pdf`);
 
-      const quotationHtml = HtmlQuotation(quotation);
+      // USING SAME HOST FILES
+      const baseUrl = `${req.protocol}://${req.get('host')}`;
+      const url = `${baseUrl}/api/files/show/`;
+
+      const quotationHtml = HtmlQuotation(quotation, url);
 
       const pdfFilePath = await this.pdfService.generatePdf(quotationHtml, outputPath);
 

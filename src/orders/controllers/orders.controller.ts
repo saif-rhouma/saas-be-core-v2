@@ -1,5 +1,5 @@
 /* eslint-disable prettier/prettier */
-import { Body, Controller, Delete, Get, Param, Patch, Post, Res, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch, Post, Req, Res, UseGuards } from '@nestjs/common';
 import { GetUser } from 'src/common/decorators/getUser.decorator';
 import { AuthenticationGuard } from 'src/common/guards/authentication.guard';
 import getApplicationId from 'src/common/helpers/application-id.func';
@@ -15,7 +15,7 @@ import { OrdersService } from '../services/orders.service';
 import { OrderStatus } from '../entities/order.entity';
 import { PdfService } from 'src/files/services/pdf.service';
 import * as path from 'path';
-import { Response as ResExp } from 'express';
+import { Response as ResExp, Request as ReqExp } from 'express';
 import { HtmlOrder } from 'src/common/pdf-templates/order.pdf.template';
 @Controller('orders')
 export class OrdersController {
@@ -50,12 +50,16 @@ export class OrdersController {
   }
 
   @Get('/pdf/:id')
-  async pdfOrder(@Param('id') id: string, @Res() res: ResExp) {
+  async pdfOrder(@Param('id') id: string, @Res() res: ResExp, @Req() req: ReqExp) {
     try {
       const order = await this.ordersService.findPdf(id);
       const outputPath = path.join(process.cwd(), 'public', `${order.ref}.pdf`);
 
-      const quotationHtml = HtmlOrder(order);
+      // USING SAME HOST FILES
+      const baseUrl = `${req.protocol}://${req.get('host')}`;
+      const url = `${baseUrl}/api/files/show/`;
+
+      const quotationHtml = HtmlOrder(order, url);
 
       const pdfFilePath = await this.pdfService.generatePdf(quotationHtml, outputPath);
       res.sendFile(pdfFilePath, (err) => {

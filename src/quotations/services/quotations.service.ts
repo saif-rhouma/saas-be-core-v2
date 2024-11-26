@@ -66,6 +66,7 @@ export class QuotationsService {
     const quotation = new Quotation();
 
     quotation.quotationDate = quotationData.quotationDate;
+    quotation.expiredDate = quotationData.expiredDate;
     quotation.application = application;
     quotation.createdBy = user;
     quotation.customer = customer;
