@@ -65,7 +65,7 @@ export class Application {
   })
   phoneNumber: string;
 
-  @Column('text', { default: PrintPOSType.A4 })
+  @Column('varchar', { default: PrintPOSType.A4 })
   printerPOS: PrintPOSType;
 
   @Column({

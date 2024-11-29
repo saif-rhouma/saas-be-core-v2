@@ -69,7 +69,7 @@ export class Order {
   })
   snapshotTaxPercentage: number;
 
-  @Column('text', { default: OrderStatus.Draft })
+  @Column('varchar', { default: OrderStatus.Draft })
   status: OrderStatus;
 
   @Column('boolean', { default: false })

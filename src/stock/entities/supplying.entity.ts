@@ -35,7 +35,7 @@ export class Supplying {
   })
   arrivesAt: Date;
 
-  @Column('text', { default: SupplyingStatus.Pending })
+  @Column('varchar', { default: SupplyingStatus.Pending })
   status: SupplyingStatus;
 
   @Column({

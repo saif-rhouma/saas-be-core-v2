@@ -47,7 +47,7 @@ export class Ticket {
   @ManyToMany(() => User, (user) => user.mentionedIn, { cascade: true, onDelete: null })
   mentions: User[];
 
-  @Column('text', { default: Priority.Medium })
+  @Column('varchar', { default: Priority.Medium })
   priority: Priority;
 
   @Column({
@@ -55,7 +55,7 @@ export class Ticket {
   })
   file: string;
 
-  @Column('text', { default: TicketStatus.Open })
+  @Column('varchar', { default: TicketStatus.Open })
   status: TicketStatus;
 
   @ManyToOne(() => User, (user) => user.tickets)
