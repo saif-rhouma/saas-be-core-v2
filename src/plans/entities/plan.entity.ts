@@ -29,7 +29,7 @@ export class Plan {
   })
   planDate: Date;
 
-  @Column('text', { default: PlanStatus.Pending })
+  @Column('varchar', { default: PlanStatus.Pending })
   status: PlanStatus;
 
   @Column({

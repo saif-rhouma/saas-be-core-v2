@@ -63,7 +63,7 @@ export class User {
   })
   phoneNumber: string;
 
-  @Column('text', { default: AccountType.Free })
+  @Column('varchar', { default: AccountType.Free })
   accountType: AccountType;
 
   @Column({

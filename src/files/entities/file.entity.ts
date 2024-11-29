@@ -35,10 +35,10 @@ export class File {
   })
   originalName: string;
 
-  @Column('text', { default: FileType.Image })
+  @Column('varchar', { default: FileType.Image })
   type: FileType;
 
-  @Column('text', { default: FileCategory.Product })
+  @Column('varchar', { default: FileCategory.Product })
   category: FileCategory;
 
   @ManyToOne(() => User, (user) => user.files)

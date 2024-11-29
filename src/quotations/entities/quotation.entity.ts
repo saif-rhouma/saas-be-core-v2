@@ -66,7 +66,7 @@ export class Quotation {
   })
   snapshotTaxPercentage: number;
 
-  @Column('text', { default: QuotationStatus.Created })
+  @Column('varchar', { default: QuotationStatus.Created })
   status: QuotationStatus;
 
   @OneToMany(() => ProductToQuotation, (productToQuotation) => productToQuotation.quotation)
