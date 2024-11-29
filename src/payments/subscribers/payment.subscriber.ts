@@ -31,6 +31,7 @@ export class PaymentSubscriber implements EntitySubscriberInterface<Payment> {
    * Called after entity update.
    */
   async afterUpdate(event: UpdateEvent<Payment>) {
-    await this.ordersService.updateAmount(event.entity.order);
+    // await this.ordersService.updateAmount(event.entity.order);
+    await this.ordersService.syncAmount(event.entity as Payment, event.entity.order);
   }
 }

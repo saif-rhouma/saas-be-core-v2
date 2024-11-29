@@ -7,6 +7,7 @@ import { NotificationsService } from '../services/notifications.service';
 import { MailerService } from '../services/mailer.service';
 import { SendEmailDto } from '../dtos/send-mail.dto';
 import { getHtmlString } from 'src/common/constants/mail-html-template';
+import { ConfigService } from '@nestjs/config';
 
 @Controller('notifications')
 export class NotificationsController {
@@ -20,6 +21,7 @@ export class NotificationsController {
     private readonly notificationsService: NotificationsService,
     private readonly ticketsService: TicketsService,
     private readonly mailerService: MailerService,
+    private readonly config: ConfigService,
   ) {}
 
   @Get('mail')
@@ -27,7 +29,7 @@ export class NotificationsController {
     const test: Partial<SendEmailDto> = {
       from: {
         name: 'Saas Test Mail',
-        address: 'test@saascore.com',
+        address: this.config.get('smtpSetting.defaultMailFrom'),
       },
       recipients: {
         name: 'Saif',

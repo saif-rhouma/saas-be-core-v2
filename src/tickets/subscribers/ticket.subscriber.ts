@@ -8,6 +8,7 @@ import { deleteKeysFromObj } from 'src/common/helpers/delete-keys-obj';
 import { MailerService } from 'src/notifications/services/mailer.service';
 import { SendEmailDto } from 'src/notifications/dtos/send-mail.dto';
 import { getHtmlString } from 'src/common/constants/mail-html-template';
+import { ConfigService } from '@nestjs/config';
 
 @EventSubscriber()
 export class TicketSubscriber implements EntitySubscriberInterface<Ticket> {
@@ -15,6 +16,7 @@ export class TicketSubscriber implements EntitySubscriberInterface<Ticket> {
     @Inject(DataSource) dataSource: DataSource,
     private readonly notificationGateway: NotificationsGateway,
     private readonly mailerService: MailerService,
+    private readonly config: ConfigService,
   ) {
     dataSource.subscribers.push(this);
   }
@@ -55,14 +57,14 @@ export class TicketSubscriber implements EntitySubscriberInterface<Ticket> {
       const mail: Partial<SendEmailDto> = {
         from: {
           name: ticket.application.name,
-          address: 'test@saascore.com',
+          address: this.config.get('smtpSetting.defaultMailFrom'),
         },
         recipients: {
           name: ticket.member.firstName,
           address: ticket.member.email,
         },
         subject: ticket.topic,
-        cc: ticket.mentions.map((user) => ({ name: user.firstName, address: user.email })),
+        cc: ticket.mentions?.map((user) => ({ name: user.firstName, address: user.email })),
         html: getHtmlString(ticket.topic, ticket.description, 'Ticket', ticket.application.appLogo),
       };
       return this.mailerService.sendEmail(mail);

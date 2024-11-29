@@ -88,44 +88,90 @@ export class TicketsService {
       return null;
     }
 
-    const tickets = await this.repo.manager.query(`
-      SELECT T.*, JSON_OBJECT(
-        'id', M.id,
-        'email', M.email,
-        'firstName', M.firstName,
-        'lastName', M.lastName,
-        'phoneNumber', M.phoneNumber,
-        'avatar', M.avatar,
-        'address', M.address
-    ) AS member,
-      -- CreatedBy details
-    JSON_OBJECT(
-        'id', C.id,
-        'email', C.email,
-        'firstName', C.firstName,
-        'lastName', C.lastName,
-        'phoneNumber', C.phoneNumber,
-        'accountType', C.accountType,
-        'avatar', C.avatar,
-        'address', C.address
-    ) AS createdBy,
-     -- CreatedBy details
-     JSON_OBJECT(
-        'id', Q.id,
-        'ref', Q.ref
-    ) AS quotation
-      FROM ticket T
-      LEFT JOIN application A ON T.applicationId = A.id        
-      LEFT JOIN user C ON T.createdById = C.id                   
-      LEFT JOIN user M ON T.memberId = M.id
-      LEFT JOIN quotation Q ON T.quotationId = Q.id                  
-      LEFT JOIN user_mentioned_in_ticket TM ON T.id = TM.ticketId 
-      LEFT JOIN user U ON TM.userId = U.id                 
-      WHERE A.id = ${appId}                               
-        AND (C.id = ${userId}                                    
-             OR M.id = ${userId}                               
-             OR U.id = ${userId})
-      GROUP BY T.id;`);
+    // const tickets = await this.repo.manager.query(`
+    //   SELECT T.*, JSON_OBJECT(
+    //     'id', M.id,
+    //     'email', M.email,
+    //     'firstName', M.firstName,
+    //     'lastName', M.lastName,
+    //     'phoneNumber', M.phoneNumber,
+    //     'avatar', M.avatar,
+    //     'address', M.address
+    // ) AS member,
+    //   -- CreatedBy details
+    // JSON_OBJECT(
+    //     'id', C.id,
+    //     'email', C.email,
+    //     'firstName', C.firstName,
+    //     'lastName', C.lastName,
+    //     'phoneNumber', C.phoneNumber,
+    //     'accountType', C.accountType,
+    //     'avatar', C.avatar,
+    //     'address', C.address
+    // ) AS createdBy,
+    //  -- CreatedBy details
+    //  JSON_OBJECT(
+    //     'id', Q.id,
+    //     'ref', Q.ref
+    // ) AS quotation
+    //   FROM ticket T
+    //   LEFT JOIN application A ON T.applicationId = A.id
+    //   LEFT JOIN user C ON T.createdById = C.id
+    //   LEFT JOIN user M ON T.memberId = M.id
+    //   LEFT JOIN quotation Q ON T.quotationId = Q.id
+    //   LEFT JOIN user_mentioned_in_ticket TM ON T.id = TM.ticketId
+    //   LEFT JOIN user U ON TM.userId = U.id
+    //   WHERE A.id = ${appId}
+    //     AND (C.id = ${userId}
+    //          OR M.id = ${userId}
+    //          OR U.id = ${userId})
+    //   GROUP BY T.id;`);
+
+    //? NOTES: MySQL Query
+    const tickets = await this.repo.manager.query(
+      `
+      SELECT T.*, 
+             JSON_OBJECT(
+               'id', M.id,
+               'email', M.email,
+               'firstName', M.firstName,
+               'lastName', M.lastName,
+               'phoneNumber', M.phoneNumber,
+               'avatar', M.avatar,
+               'address', M.address
+             ) AS member,
+             -- CreatedBy details
+             JSON_OBJECT(
+               'id', C.id,
+               'email', C.email,
+               'firstName', C.firstName,
+               'lastName', C.lastName,
+               'phoneNumber', C.phoneNumber,
+               'accountType', C.accountType,
+               'avatar', C.avatar,
+               'address', C.address
+             ) AS createdBy,
+             -- Quotation details
+             JSON_OBJECT(
+               'id', Q.id,
+               'ref', Q.ref
+             ) AS quotation
+      FROM \`ticket\` T
+      LEFT JOIN \`application\` A ON T.applicationId = A.id        
+      LEFT JOIN \`user\` C ON T.createdById = C.id                   
+      LEFT JOIN \`user\` M ON T.memberId = M.id
+      LEFT JOIN \`quotation\` Q ON T.quotationId = Q.id                   
+      LEFT JOIN \`user_mentioned_in_ticket\` TM ON T.id = TM.ticketId 
+      LEFT JOIN \`user\` U ON TM.userId = U.id                  
+      WHERE A.id = ?
+        AND (C.id = ?                                      
+             OR M.id = ?                                  
+             OR U.id = ?)
+      GROUP BY T.id;
+    `,
+      [appId, userId, userId, userId],
+    );
+
     return tickets;
   }
 
@@ -188,11 +234,22 @@ export class TicketsService {
     if (!appId) {
       return null;
     }
+    // const analytics = await this.repo.manager.query(
+    //   `select SUM(CASE WHEN status = '${TicketStatus.Open}' THEN 1 ELSE 0 END) As Open,
+    //   SUM(CASE WHEN status = '${TicketStatus.Closed}' THEN 1 ELSE 0 END) AS Closed,
+    //   COUNT(*) AS Count from 'ticket'
+    //   where applicationId = ${appId};`,
+    // );
+
+    //? NOTES: MySQL Query
     const analytics = await this.repo.manager.query(
-      `select SUM(CASE WHEN status = '${TicketStatus.Open}' THEN 1 ELSE 0 END) As Open,
-      SUM(CASE WHEN status = '${TicketStatus.Closed}' THEN 1 ELSE 0 END) AS Closed,
-      COUNT(*) AS Count from 'ticket'
-      where applicationId = ${appId};`,
+      `SELECT 
+          SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) AS Open,
+          SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) AS Closed,
+          COUNT(*) AS Count
+       FROM \`ticket\`
+       WHERE applicationId = ?;`,
+      [TicketStatus.Open, TicketStatus.Closed, appId],
     );
 
     return { analytics: analytics[0] };

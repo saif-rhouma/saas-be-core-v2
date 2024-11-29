@@ -206,18 +206,36 @@ export class PlansService {
   }
 
   async getStockPlan(appId: number) {
+    // const res = await this.repo.manager.query(
+    //   `SELECT
+    // pln.productId, prod.name, prod.image,
+    // SUM(CASE WHEN status = '${PlanStatus.Ready}' THEN pln.quantity ELSE 0 END) AS ready_quantity,
+    // SUM(CASE WHEN status = '${PlanStatus.Pending}' THEN pln.quantity ELSE 0 END) AS pending_quantity,
+    // SUM(CASE WHEN status = '${PlanStatus.ProcessingA}' THEN pln.quantity ELSE 0 END) AS processing_a_quantity,
+    // SUM(CASE WHEN status = '${PlanStatus.ProcessingB}' THEN pln.quantity ELSE 0 END) AS processing_b_quantity,
+    // SUM(pln.quantity) AS totals_quantity
+    // FROM "plan" pln
+    // JOIN product prod ON prod.id = pln.productId
+    // WHERE pln.applicationId = ${appId}
+    // GROUP BY pln.productId;`,
+    // );
+
+    //? NOTES: MySQL Query
     const res = await this.repo.manager.query(
       `SELECT 
-    pln.productId, prod.name, prod.image,
-    SUM(CASE WHEN status = '${PlanStatus.Ready}' THEN pln.quantity ELSE 0 END) AS ready_quantity,
-    SUM(CASE WHEN status = '${PlanStatus.Pending}' THEN pln.quantity ELSE 0 END) AS pending_quantity,
-    SUM(CASE WHEN status = '${PlanStatus.ProcessingA}' THEN pln.quantity ELSE 0 END) AS processing_a_quantity,
-    SUM(CASE WHEN status = '${PlanStatus.ProcessingB}' THEN pln.quantity ELSE 0 END) AS processing_b_quantity,
-    SUM(pln.quantity) AS totals_quantity
-    FROM "plan" pln
-    JOIN product prod ON prod.id = pln.productId 
-    WHERE pln.applicationId = ${appId}
-    GROUP BY pln.productId;`,
+          pln.productId, 
+          prod.name, 
+          prod.image,
+          SUM(CASE WHEN status = ? THEN pln.quantity ELSE 0 END) AS ready_quantity,
+          SUM(CASE WHEN status = ? THEN pln.quantity ELSE 0 END) AS pending_quantity,
+          SUM(CASE WHEN status = ? THEN pln.quantity ELSE 0 END) AS processing_a_quantity,
+          SUM(CASE WHEN status = ? THEN pln.quantity ELSE 0 END) AS processing_b_quantity,
+          SUM(pln.quantity) AS totals_quantity
+       FROM \`plan\` pln
+       JOIN product prod ON prod.id = pln.productId 
+       WHERE pln.applicationId = ?
+       GROUP BY pln.productId;`,
+      [PlanStatus.Ready, PlanStatus.Pending, PlanStatus.ProcessingA, PlanStatus.ProcessingB, appId],
     );
 
     return res;

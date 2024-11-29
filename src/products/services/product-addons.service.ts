@@ -1,3 +1,4 @@
+/* eslint-disable prettier/prettier */
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { ProductAddon } from '../entities/product-addon.entity';
 import { Repository } from 'typeorm';

@@ -10,6 +10,7 @@ import { RemindersService } from '../services/reminders.service';
 import { MailerService } from 'src/notifications/services/mailer.service';
 import { getHtmlString } from 'src/common/constants/mail-html-template';
 import { SendEmailDto } from 'src/notifications/dtos/send-mail.dto';
+import { ConfigService } from '@nestjs/config';
 
 @EventSubscriber()
 export class ReminderSubscriber implements EntitySubscriberInterface<Reminder> {
@@ -20,6 +21,7 @@ export class ReminderSubscriber implements EntitySubscriberInterface<Reminder> {
     private readonly notificationGateway: NotificationsGateway,
     private readonly remindersService: RemindersService,
     private readonly mailerService: MailerService,
+    private readonly config: ConfigService,
   ) {
     dataSource.subscribers.push(this);
   }
@@ -102,7 +104,7 @@ export class ReminderSubscriber implements EntitySubscriberInterface<Reminder> {
       const mail: Partial<SendEmailDto> = {
         from: {
           name: reminder.application.name,
-          address: 'test@saascore.com',
+          address: this.config.get('smtpSetting.defaultMailFrom'),
         },
         recipients: {
           name: reminder.createdBy.firstName,

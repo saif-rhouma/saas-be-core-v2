@@ -17,6 +17,7 @@ import { CreateOrderDto } from '../dtos/create-order.dto';
 import { UpdateOrderDto } from '../dtos/update-order.dto';
 import { Order, OrderStatus } from '../entities/order.entity';
 import { ProductOrderService } from './product-order.service';
+import { Payment } from 'src/payments/entities/payment.entity';
 
 @Injectable()
 export class OrdersService {
@@ -273,7 +274,6 @@ export class OrdersService {
 
   async detailsApprove(id: string, appId: number) {
     const order = await this.findOneByApplicationDetailed(id, appId);
-    // const ProductList
     return order;
   }
 
@@ -325,14 +325,50 @@ export class OrdersService {
 
   async updateAmount(order: Order) {
     try {
+      // const [{ total }] = await this.repo.manager.query(
+      //   `SELECT SUM(p.amount) as total
+      //   FROM "order" o LEFT JOIN payment p
+      //   ON p.orderId = o.id
+      //   WHERE o.id = '${order.id}';`,
+      // );
+
+      //? NOTES: MySQL Query
       const [{ total }] = await this.repo.manager.query(
         `SELECT SUM(p.amount) as total
-        FROM "order" o LEFT JOIN payment p 
-        ON p.orderId = o.id
-        WHERE o.id = '${order.id}';`,
+         FROM \`order\` o
+         LEFT JOIN payment p ON p.orderId = o.id
+         WHERE o.id = ?;`,
+        [order.id],
       );
+
       if (total) {
         order.orderPaymentAmount = total;
+        await this.repo.save(order);
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  }
+
+  async syncAmount(payment: Payment, order: Order) {
+    try {
+      // const [{ total }] = await this.repo.manager.query(
+      //   `SELECT SUM(p.amount) as total
+      //   FROM "order" o LEFT JOIN payment p
+      //   ON p.orderId = o.id
+      //   WHERE o.id = '${order.id}' AND p.id <> ${payment.id};`,
+      // );
+
+      //? NOTES: MySQL Query
+      const [{ total }] = await this.repo.manager.query(
+        `SELECT SUM(p.amount) as total
+         FROM \`order\` o
+         LEFT JOIN payment p ON p.orderId = o.id
+         WHERE o.id = ? AND p.id <> ?;`,
+        [order.id, payment.id],
+      );
+      if (total) {
+        order.orderPaymentAmount = parseInt(total) + payment.amount;
         await this.repo.save(order);
       }
     } catch (error) {
@@ -346,44 +382,119 @@ export class OrdersService {
         return null;
       }
 
+      //   const analytics = await this.repo.manager.query(
+      //     `select SUM(CASE WHEN status = '${OrderStatus.Ready}' THEN 1 ELSE 0 END) As Ready,
+      // SUM(CASE WHEN status = '${OrderStatus.Delivered}' THEN 1 ELSE 0 END) AS Delivered,
+      // SUM(CASE WHEN status = '${OrderStatus.InProcess}' THEN 1 ELSE 0 END) AS InProcess from 'order'
+      // where applicationId = ${appId};`,
+      //   );
+
+      //? NOTES: MySQL Query
       const analytics = await this.repo.manager.query(
-        `select SUM(CASE WHEN status = '${OrderStatus.Ready}' THEN 1 ELSE 0 END) As Ready,
-    SUM(CASE WHEN status = '${OrderStatus.Delivered}' THEN 1 ELSE 0 END) AS Delivered,
-    SUM(CASE WHEN status = '${OrderStatus.InProcess}' THEN 1 ELSE 0 END) AS InProcess from 'order'
-    where applicationId = ${appId};`,
+        `SELECT 
+          SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) AS Ready,
+          SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) AS Delivered,
+          SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) AS InProcess
+       FROM \`order\`
+       WHERE applicationId = ?;`,
+        [OrderStatus.Ready, OrderStatus.Delivered, OrderStatus.InProcess, appId],
       );
+
+      // const inProcessLastSixMonth = await this.repo.manager.query(
+      //   `SELECT  COUNT(id) AS ClaimsPerMonth,
+      // (strftime('%m', orderDate)) AS inMonth,
+      // (strftime('%Y', orderDate)) AS inYear  FROM 'order'
+      // WHERE orderDate >= DATE('now', '-7 months') and status = '${OrderStatus.InProcess}' and applicationId = ${appId}
+      // GROUP BY strftime('%Y', orderDate), strftime('%m', orderDate)
+      // ORDER BY inYear, inMonth`,
+      // );
+
+      //? NOTES: MySQL Query
       const inProcessLastSixMonth = await this.repo.manager.query(
-        `SELECT  COUNT(id) AS ClaimsPerMonth,
-      (strftime('%m', orderDate)) AS inMonth,
-      (strftime('%Y', orderDate)) AS inYear  FROM 'order'
-      WHERE orderDate >= DATE('now', '-7 months') and status = '${OrderStatus.InProcess}' and applicationId = ${appId}
-      GROUP BY strftime('%Y', orderDate), strftime('%m', orderDate)
-      ORDER BY inYear, inMonth`,
+        `SELECT 
+            COUNT(id) AS ClaimsPerMonth,
+            MONTH(orderDate) AS inMonth,
+            YEAR(orderDate) AS inYear
+         FROM \`order\`
+         WHERE orderDate >= DATE_SUB(CURDATE(), INTERVAL 7 MONTH)
+           AND status = ?
+           AND applicationId = ?
+         GROUP BY YEAR(orderDate), MONTH(orderDate)
+         ORDER BY inYear, inMonth;`,
+        [OrderStatus.InProcess, appId],
       );
+
+      // const readyLastSixMonth = await this.repo.manager.query(
+      //   `SELECT  COUNT(id) AS ClaimsPerMonth,
+      // (strftime('%m', orderDate)) AS inMonth,
+      // (strftime('%Y', orderDate)) AS inYear  FROM 'order'
+      // WHERE orderDate >= DATE('now', '-7 months') and status = '${OrderStatus.Ready}' and applicationId = ${appId}
+      // GROUP BY strftime('%Y', orderDate), strftime('%m', orderDate)
+      // ORDER BY inYear, inMonth`,
+      // );
+
+      //? NOTES: MySQL Query
       const readyLastSixMonth = await this.repo.manager.query(
-        `SELECT  COUNT(id) AS ClaimsPerMonth,
-      (strftime('%m', orderDate)) AS inMonth,
-      (strftime('%Y', orderDate)) AS inYear  FROM 'order'
-      WHERE orderDate >= DATE('now', '-7 months') and status = '${OrderStatus.Ready}' and applicationId = ${appId}
-      GROUP BY strftime('%Y', orderDate), strftime('%m', orderDate)
-      ORDER BY inYear, inMonth`,
+        `SELECT 
+            COUNT(id) AS ClaimsPerMonth,
+            MONTH(orderDate) AS inMonth,
+            YEAR(orderDate) AS inYear
+         FROM \`order\`
+         WHERE orderDate >= DATE_SUB(CURDATE(), INTERVAL 7 MONTH)
+           AND status = ?
+           AND applicationId = ?
+         GROUP BY YEAR(orderDate), MONTH(orderDate)
+         ORDER BY inYear, inMonth;`,
+        [OrderStatus.Ready, appId],
       );
+
+      // const deliveredLastSixMonth = await this.repo.manager.query(
+      //   `SELECT  COUNT(id) AS ClaimsPerMonth,
+      // (strftime('%m', orderDate)) AS inMonth,
+      // (strftime('%Y', orderDate)) AS inYear  FROM 'order'
+      // WHERE orderDate >= DATE('now', '-7 months') and status = '${OrderStatus.Delivered}' and applicationId = ${appId}
+      // GROUP BY strftime('%Y', orderDate), strftime('%m', orderDate)
+      // ORDER BY inYear, inMonth`,
+      // );
+
+      //? NOTES: MySQL Query
       const deliveredLastSixMonth = await this.repo.manager.query(
-        `SELECT  COUNT(id) AS ClaimsPerMonth,
-      (strftime('%m', orderDate)) AS inMonth,
-      (strftime('%Y', orderDate)) AS inYear  FROM 'order'
-      WHERE orderDate >= DATE('now', '-7 months') and status = '${OrderStatus.Delivered}' and applicationId = ${appId}
-      GROUP BY strftime('%Y', orderDate), strftime('%m', orderDate)
-      ORDER BY inYear, inMonth`,
+        `SELECT 
+            COUNT(id) AS ClaimsPerMonth,
+            MONTH(orderDate) AS inMonth,
+            YEAR(orderDate) AS inYear
+         FROM \`order\`
+         WHERE orderDate >= DATE_SUB(CURDATE(), INTERVAL 7 MONTH)
+           AND status = ?
+           AND applicationId = ?
+         GROUP BY YEAR(orderDate), MONTH(orderDate)
+         ORDER BY inYear, inMonth;`,
+        [OrderStatus.Delivered, appId],
       );
+
+      // const lastSixMonth = await this.repo.manager.query(
+      //   `SELECT  COUNT(id) AS ClaimsPerMonth,
+      // (strftime('%m', orderDate)) AS inMonth,
+      // (strftime('%Y', orderDate)) AS inYear  FROM 'order'
+      // WHERE orderDate >= DATE('now', '-7 months') and applicationId = ${appId}
+      // GROUP BY strftime('%Y', orderDate), strftime('%m', orderDate)
+      // ORDER BY inYear, inMonth`,
+      // );
+
+      //? NOTES: MySQL Query
       const lastSixMonth = await this.repo.manager.query(
-        `SELECT  COUNT(id) AS ClaimsPerMonth,
-      (strftime('%m', orderDate)) AS inMonth,
-      (strftime('%Y', orderDate)) AS inYear  FROM 'order'
-      WHERE orderDate >= DATE('now', '-7 months') and applicationId = ${appId}
-      GROUP BY strftime('%Y', orderDate), strftime('%m', orderDate)
-      ORDER BY inYear, inMonth`,
+        `SELECT 
+            COUNT(id) AS ClaimsPerMonth,
+            MONTH(orderDate) AS inMonth,
+            YEAR(orderDate) AS inYear
+         FROM \`order\`
+         WHERE orderDate >= DATE_SUB(CURDATE(), INTERVAL 7 MONTH)
+           AND applicationId = ?
+         GROUP BY YEAR(orderDate), MONTH(orderDate)
+         ORDER BY inYear, inMonth;`,
+        [appId],
       );
+
       return { analytics: analytics[0], lastSixMonth, readyLastSixMonth, deliveredLastSixMonth, inProcessLastSixMonth };
     } catch (error) {}
   }
@@ -396,10 +507,25 @@ export class OrdersService {
 
       const categories = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
+      // const queryRes = await this.repo
+      //   .createQueryBuilder('order')
+      //   .select("(strftime('%Y', orderDate))", 'year')
+      //   .addSelect("(strftime('%m', orderDate))", 'month')
+      //   .addSelect(`SUM(CASE WHEN order.status = '${OrderStatus.Ready}' THEN 1 ELSE 0 END)`, 'readyCount')
+      //   .addSelect(`SUM(CASE WHEN order.status = '${OrderStatus.Delivered}' THEN 1 ELSE 0 END)`, 'deliveredCount')
+      //   .addSelect(`SUM(CASE WHEN order.status = '${OrderStatus.InProcess}' THEN 1 ELSE 0 END)`, 'progressCount')
+      //   .where('order.applicationId = :appId', { appId })
+      //   .groupBy('year')
+      //   .addGroupBy('month')
+      //   .orderBy('year', 'ASC')
+      //   .addOrderBy('month', 'ASC')
+      //   .getRawMany();
+
+      //? NOTES: MySQL Query
       const queryRes = await this.repo
         .createQueryBuilder('order')
-        .select("(strftime('%Y', orderDate))", 'year')
-        .addSelect("(strftime('%m', orderDate))", 'month')
+        .select('YEAR(order.orderDate)', 'year')
+        .addSelect('MONTH(order.orderDate)', 'month')
         .addSelect(`SUM(CASE WHEN order.status = '${OrderStatus.Ready}' THEN 1 ELSE 0 END)`, 'readyCount')
         .addSelect(`SUM(CASE WHEN order.status = '${OrderStatus.Delivered}' THEN 1 ELSE 0 END)`, 'deliveredCount')
         .addSelect(`SUM(CASE WHEN order.status = '${OrderStatus.InProcess}' THEN 1 ELSE 0 END)`, 'progressCount')
@@ -439,54 +565,140 @@ export class OrdersService {
         series,
       };
 
+      //   const analytics = await this.repo.manager.query(
+      //     `select SUM(CASE WHEN status = '${OrderStatus.Ready}' THEN 1 ELSE 0 END) As Ready,
+      // SUM(CASE WHEN status = '${OrderStatus.Delivered}' THEN 1 ELSE 0 END) AS Delivered,
+      // SUM(CASE WHEN status = '${OrderStatus.Draft}' THEN 1 ELSE 0 END) AS Draft,
+      // SUM(CASE WHEN status = '${OrderStatus.InProcess}' THEN 1 ELSE 0 END) AS InProcess,
+      // COUNT(*) AS Total
+      // from 'order'
+      // where applicationId = ${appId};`,
+      //   );
+
+      //? NOTES: MySQL Query
       const analytics = await this.repo.manager.query(
-        `select SUM(CASE WHEN status = '${OrderStatus.Ready}' THEN 1 ELSE 0 END) As Ready,
-    SUM(CASE WHEN status = '${OrderStatus.Delivered}' THEN 1 ELSE 0 END) AS Delivered,
-    SUM(CASE WHEN status = '${OrderStatus.Draft}' THEN 1 ELSE 0 END) AS Draft,
-    SUM(CASE WHEN status = '${OrderStatus.InProcess}' THEN 1 ELSE 0 END) AS InProcess,
-    COUNT(*) AS Total
-    from 'order'
-    where applicationId = ${appId};`,
+        `SELECT 
+        SUM(CASE WHEN status = '${OrderStatus.Ready}' THEN 1 ELSE 0 END) AS Ready,
+        SUM(CASE WHEN status = '${OrderStatus.Delivered}' THEN 1 ELSE 0 END) AS Delivered,
+        SUM(CASE WHEN status = '${OrderStatus.Draft}' THEN 1 ELSE 0 END) AS Draft,
+        SUM(CASE WHEN status = '${OrderStatus.InProcess}' THEN 1 ELSE 0 END) AS InProcess,
+        COUNT(*) AS Total
+      FROM \`order\`
+      WHERE applicationId = ${appId};`,
       );
+
+      // const readyLastSixMonth = await this.repo.manager.query(
+      //   `SELECT  COUNT(id) AS ClaimsPerMonth,
+      // (strftime('%m', orderDate)) AS inMonth,
+      // (strftime('%Y', orderDate)) AS inYear  FROM 'order'
+      // WHERE orderDate >= DATE('now', '-7 months') and status = '${OrderStatus.Ready}' and applicationId = ${appId}
+      // GROUP BY strftime('%Y', orderDate), strftime('%m', orderDate)
+      // ORDER BY inYear, inMonth`,
+      // );
+      //? NOTES: MySQL Query
       const readyLastSixMonth = await this.repo.manager.query(
-        `SELECT  COUNT(id) AS ClaimsPerMonth,
-      (strftime('%m', orderDate)) AS inMonth,
-      (strftime('%Y', orderDate)) AS inYear  FROM 'order'
-      WHERE orderDate >= DATE('now', '-7 months') and status = '${OrderStatus.Ready}' and applicationId = ${appId}
-      GROUP BY strftime('%Y', orderDate), strftime('%m', orderDate)
-      ORDER BY inYear, inMonth`,
+        `SELECT COUNT(id) AS ClaimsPerMonth,
+                MONTH(orderDate) AS inMonth,
+                YEAR(orderDate) AS inYear
+        FROM \`order\`
+        WHERE orderDate >= DATE_SUB(CURDATE(), INTERVAL 7 MONTH) AND status = '${OrderStatus.Ready}' 
+        AND applicationId = ${appId}
+        GROUP BY YEAR(orderDate), MONTH(orderDate)
+        ORDER BY inYear, inMonth;`,
       );
+
+      // const draftLastSixMonth = await this.repo.manager.query(
+      //   `SELECT  COUNT(id) AS ClaimsPerMonth,
+      // (strftime('%m', orderDate)) AS inMonth,
+      // (strftime('%Y', orderDate)) AS inYear  FROM 'order'
+      // WHERE orderDate >= DATE('now', '-7 months') and status = '${OrderStatus.Draft}' and applicationId = ${appId}
+      // GROUP BY strftime('%Y', orderDate), strftime('%m', orderDate)
+      // ORDER BY inYear, inMonth`,
+      // );
+
+      //? NOTES: MySQL Query
       const draftLastSixMonth = await this.repo.manager.query(
-        `SELECT  COUNT(id) AS ClaimsPerMonth,
-      (strftime('%m', orderDate)) AS inMonth,
-      (strftime('%Y', orderDate)) AS inYear  FROM 'order'
-      WHERE orderDate >= DATE('now', '-7 months') and status = '${OrderStatus.Draft}' and applicationId = ${appId}
-      GROUP BY strftime('%Y', orderDate), strftime('%m', orderDate)
-      ORDER BY inYear, inMonth`,
+        `SELECT 
+            COUNT(id) AS ClaimsPerMonth,
+            MONTH(orderDate) AS inMonth,
+            YEAR(orderDate) AS inYear
+         FROM \`order\`
+         WHERE orderDate >= DATE_SUB(CURDATE(), INTERVAL 7 MONTH)
+           AND status = ?
+           AND applicationId = ?
+         GROUP BY YEAR(orderDate), MONTH(orderDate)
+         ORDER BY inYear, inMonth;`,
+        [OrderStatus.Draft, appId],
       );
+
+      // const inProcessLastSixMonth = await this.repo.manager.query(
+      //   `SELECT  COUNT(id) AS ClaimsPerMonth,
+      // (strftime('%m', orderDate)) AS inMonth,
+      // (strftime('%Y', orderDate)) AS inYear  FROM 'order'
+      // WHERE orderDate >= DATE('now', '-7 months') and status = '${OrderStatus.InProcess}' and applicationId = ${appId}
+      // GROUP BY strftime('%Y', orderDate), strftime('%m', orderDate)
+      // ORDER BY inYear, inMonth`,
+      // );
+      //? NOTES: MySQL Query
       const inProcessLastSixMonth = await this.repo.manager.query(
-        `SELECT  COUNT(id) AS ClaimsPerMonth,
-      (strftime('%m', orderDate)) AS inMonth,
-      (strftime('%Y', orderDate)) AS inYear  FROM 'order'
-      WHERE orderDate >= DATE('now', '-7 months') and status = '${OrderStatus.InProcess}' and applicationId = ${appId}
-      GROUP BY strftime('%Y', orderDate), strftime('%m', orderDate)
-      ORDER BY inYear, inMonth`,
+        `SELECT 
+            COUNT(id) AS ClaimsPerMonth,
+            MONTH(orderDate) AS inMonth,
+            YEAR(orderDate) AS inYear
+         FROM \`order\`
+         WHERE orderDate >= DATE_SUB(CURDATE(), INTERVAL 7 MONTH)
+           AND status = ?
+           AND applicationId = ?
+         GROUP BY YEAR(orderDate), MONTH(orderDate)
+         ORDER BY inYear, inMonth;`,
+        [OrderStatus.InProcess, appId],
       );
+
+      // const deliveredLastSixMonth = await this.repo.manager.query(
+      //   `SELECT  COUNT(id) AS ClaimsPerMonth,
+      // (strftime('%m', orderDate)) AS inMonth,
+      // (strftime('%Y', orderDate)) AS inYear  FROM 'order'
+      // WHERE orderDate >= DATE('now', '-7 months') and status = '${OrderStatus.Delivered}' and applicationId = ${appId}
+      // GROUP BY strftime('%Y', orderDate), strftime('%m', orderDate)
+      // ORDER BY inYear, inMonth`,
+      // );
+
+      //? NOTES: MySQL Query
       const deliveredLastSixMonth = await this.repo.manager.query(
-        `SELECT  COUNT(id) AS ClaimsPerMonth,
-      (strftime('%m', orderDate)) AS inMonth,
-      (strftime('%Y', orderDate)) AS inYear  FROM 'order'
-      WHERE orderDate >= DATE('now', '-7 months') and status = '${OrderStatus.Delivered}' and applicationId = ${appId}
-      GROUP BY strftime('%Y', orderDate), strftime('%m', orderDate)
-      ORDER BY inYear, inMonth`,
+        `SELECT 
+            COUNT(id) AS ClaimsPerMonth,
+            MONTH(orderDate) AS inMonth,
+            YEAR(orderDate) AS inYear
+         FROM \`order\`
+         WHERE orderDate >= DATE_SUB(CURDATE(), INTERVAL 7 MONTH)
+           AND status = ?
+           AND applicationId = ?
+         GROUP BY YEAR(orderDate), MONTH(orderDate)
+         ORDER BY inYear, inMonth;`,
+        [OrderStatus.Delivered, appId],
       );
+
+      // const lastSixMonth = await this.repo.manager.query(
+      //   `SELECT  COUNT(id) AS ClaimsPerMonth,
+      // (strftime('%m', orderDate)) AS inMonth,
+      // (strftime('%Y', orderDate)) AS inYear  FROM 'order'
+      // WHERE orderDate >= DATE('now', '-7 months') and applicationId = ${appId}
+      // GROUP BY strftime('%Y', orderDate), strftime('%m', orderDate)
+      // ORDER BY inYear, inMonth`,
+      // );
+
+      //? NOTES: MySQL Query
       const lastSixMonth = await this.repo.manager.query(
-        `SELECT  COUNT(id) AS ClaimsPerMonth,
-      (strftime('%m', orderDate)) AS inMonth,
-      (strftime('%Y', orderDate)) AS inYear  FROM 'order'
-      WHERE orderDate >= DATE('now', '-7 months') and applicationId = ${appId}
-      GROUP BY strftime('%Y', orderDate), strftime('%m', orderDate)
-      ORDER BY inYear, inMonth`,
+        `SELECT 
+            COUNT(id) AS ClaimsPerMonth,
+            MONTH(orderDate) AS inMonth,
+            YEAR(orderDate) AS inYear
+         FROM \`order\`
+         WHERE orderDate >= DATE_SUB(CURDATE(), INTERVAL 7 MONTH)
+           AND applicationId = ?
+         GROUP BY YEAR(orderDate), MONTH(orderDate)
+         ORDER BY inYear, inMonth;`,
+        [appId],
       );
       return {
         analytics: analytics[0],

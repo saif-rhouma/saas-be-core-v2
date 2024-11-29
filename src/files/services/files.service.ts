@@ -73,11 +73,9 @@ export class FilesService {
   }
 
   async removeFile(fileName: string, userId: number, applicationId: number) {
-    console.log('---> Remove');
     try {
       if (fileName && fileName.indexOf('.') !== -1) {
         const isOwner = await this.findByName(fileName, userId, applicationId);
-        console.log('--> isOwner', isOwner);
         if (isOwner.length) {
           const filePath = join(process.cwd(), 'public', fileName);
           if (existsSync(filePath)) {

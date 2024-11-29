@@ -1,3 +1,4 @@
+/* eslint-disable prettier/prettier */
 import { forwardRef, Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { Financial } from '../entities/financial-year.entity';
 import { Repository } from 'typeorm';

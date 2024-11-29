@@ -125,10 +125,20 @@ export class CustomersService {
 
     const LIMIT_ROW = 5;
 
+    // const analytics = await this.repo.manager.query(`
+    //   SELECT c.* , COUNT(o.id) AS total_orders
+    //   FROM customer c
+    //   LEFT JOIN "order" o ON o.customerId = c.id
+    //   LEFT JOIN application s ON o.applicationId = s.id
+    //   WHERE s.id = ${appId}
+    //   GROUP BY o.customerId
+    //   ORDER by total_orders DESC LIMIT ${LIMIT_ROW}`);
+
+    //? NOTES: MySQL Query
     const analytics = await this.repo.manager.query(`
       SELECT c.* , COUNT(o.id) AS total_orders
       FROM customer c 
-      LEFT JOIN "order" o ON o.customerId = c.id
+      LEFT JOIN \`order\` o ON o.customerId = c.id
       LEFT JOIN application s ON o.applicationId = s.id
       WHERE s.id = ${appId}
       GROUP BY o.customerId
@@ -136,17 +146,34 @@ export class CustomersService {
 
     return analytics;
   }
+
   async topProductsByCustomer(customerId: number) {
-    const products = await this.repo.manager.query(`
+    // const products = await this.repo.manager.query(`
+    //   SELECT p.*,
+    //   SUM(pto.quantity) AS total_quantity
+    //   FROM customer c
+    //   JOIN "order" o ON c.id = o.customerId
+    //   JOIN product_to_order pto ON o.id = pto.orderId
+    //   JOIN product p ON p.id = pto.productId
+    //   WHERE c.id = ${customerId}
+    //   GROUP BY p.name
+    //   ORDER BY total_quantity DESC;`);
+
+    //? NOTES: MySQL Query
+    const products = await this.repo.manager.query(
+      `
       SELECT p.*, 
-      SUM(pto.quantity) AS total_quantity
+             SUM(pto.quantity) AS total_quantity
       FROM customer c
-      JOIN "order" o ON c.id = o.customerId
+      JOIN \`order\` o ON c.id = o.customerId
       JOIN product_to_order pto ON o.id = pto.orderId
       JOIN product p ON p.id = pto.productId
-      WHERE c.id = ${customerId}  
-      GROUP BY p.name
-      ORDER BY total_quantity DESC;`);
+      WHERE c.id = ?
+      GROUP BY p.id
+      ORDER BY total_quantity DESC;
+    `,
+      [customerId],
+    );
     return products;
   }
 }

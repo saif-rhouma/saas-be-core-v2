@@ -51,6 +51,7 @@ import { QuotationsModule } from './quotations/quotations.module';
 import { Quotation } from './quotations/entities/quotation.entity';
 import { ProductToQuotation } from './quotations/entities/product_quotation.entity';
 import configuration from './common/configs/config';
+import { DATABASE_TYPE } from './common/constants/global';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -92,15 +93,49 @@ import configuration from './common/configs/config';
     TypeOrmModule.forRootAsync({
       inject: [ConfigService],
       useFactory: (config: ConfigService) => {
+        if (config.get('databaseType') === DATABASE_TYPE.MYSQL) {
+          return {
+            type: 'mysql',
+            host: config.get('database.host'),
+            port: config.get('database.port'),
+            username: config.get('database.username'),
+            password: config.get('database.password'),
+            database: config.get<string>('database.dbName'),
+            synchronize: true,
+            // logging: ['query', 'error'],
+            entities: [
+              User,
+              RefreshToken,
+              Permission,
+              Role,
+              Product,
+              Application,
+              Plan,
+              Customer,
+              Order,
+              ProductToOrder,
+              Payment,
+              Ticket,
+              TicketMessage,
+              Stock,
+              Supplying,
+              File,
+              Reminder,
+              ProductAddon,
+              Financial,
+              Category,
+              PermissionsGroup,
+              Quotation,
+              ProductToQuotation,
+            ],
+          };
+        }
+        //! NOTES : THIS CONFIGS IS ONLY FOR LOCAL DEV SETUP
         return {
           type: 'sqlite',
-          // host: config.get('database.host'),
-          // port: config.get('database.port'),
-          // username: config.get('database.username'),
-          // password: config.get('database.password'),
-          database: config.get<string>('database.dbName'),
+          database: 'db.dev.sqlite',
           synchronize: true,
-          // logging: ['query', 'error'],
+          logging: ['query', 'error'],
           entities: [
             User,
             RefreshToken,

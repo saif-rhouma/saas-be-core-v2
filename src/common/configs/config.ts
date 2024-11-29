@@ -3,7 +3,7 @@ export default () => ({
   port: parseInt(process.env.PORT, 10),
   nodeEnv: process.env.NODE_ENV,
   appName: process.env.APP_NAME,
-  databaseType: 'sqlite',
+  databaseType: process.env.DB_TYPE,
   database: {
     dbName: process.env.DB_NAME,
     host: process.env.DB_HOST,

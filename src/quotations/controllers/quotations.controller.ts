@@ -18,11 +18,13 @@ import { getHtmlString } from 'src/common/constants/mail-html-template';
 import { MailerService } from 'src/notifications/services/mailer.service';
 import { ShareQuotationDto } from '../dtos/share-quotation.dto';
 import { HTTP_CODE } from 'src/common/constants/http-status-code';
+import { ConfigService } from '@nestjs/config';
 
 @Controller('quotations')
 export class QuotationsController {
   constructor(
     private quotationsService: QuotationsService,
+    private readonly config: ConfigService,
     private pdfService: PdfService,
     private readonly mailerService: MailerService,
   ) {}
@@ -70,7 +72,7 @@ export class QuotationsController {
       const mail: Partial<SendEmailDto> = {
         from: {
           name: quotation.application.name,
-          address: 'test@saascore.com',
+          address: this.config.get('smtpSetting.defaultMailFrom'),
         },
         recipients: {
           name: quotation.customer.name,
