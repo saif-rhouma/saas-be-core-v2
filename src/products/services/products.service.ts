@@ -9,6 +9,8 @@ import { UpdateProductDto } from '../dtos/update-product.dto';
 import { ApplicationsService } from 'src/applications/services/applications.service';
 import { OrderStatus } from 'src/orders/entities/order.entity';
 import { CategoriesService } from './categories.service';
+import { DATABASE_TYPE } from 'src/common/constants/global';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class ProductService {
@@ -17,6 +19,7 @@ export class ProductService {
     private applicationsService: ApplicationsService,
     @Inject(forwardRef(() => CategoriesService))
     private readonly categoriesService: CategoriesService,
+    private readonly config: ConfigService,
   ) {}
 
   async create(productData: CreateProductDto, applicationId: number) {
@@ -156,19 +159,9 @@ export class ProductService {
     if (!appId) {
       return null;
     }
-
-    // const analytics = await this.repo.manager.query(`
-    //   SELECT p.*, SUM(op.quantity) AS total_quantity
-    //   FROM product p
-    //   LEFT JOIN product_to_order op ON p.id = op.productId
-    //   LEFT JOIN "order" o ON op.orderId = o.id
-    //   LEFT JOIN application s ON o.applicationId = s.id
-    //   WHERE s.id = ${appId}
-    //   GROUP BY p.id, p.name
-    //   ORDER BY total_quantity DESC;`);
-
-    //? NOTES: MySQL Query
-    const analytics = await this.repo.manager.query(`
+    if (this.config.get('databaseType') === DATABASE_TYPE.MYSQL) {
+      //? NOTES: MySQL Query
+      const analytics = await this.repo.manager.query(`
       SELECT p.*, SUM(op.quantity) AS total_quantity
       FROM product p
       LEFT JOIN product_to_order op ON p.id = op.productId 
@@ -179,6 +172,17 @@ export class ProductService {
       ORDER BY total_quantity DESC;
     `);
 
+      return analytics;
+    }
+    const analytics = await this.repo.manager.query(`
+      SELECT p.*, SUM(op.quantity) AS total_quantity
+      FROM product p
+      LEFT JOIN product_to_order op ON p.id = op.productId
+      LEFT JOIN "order" o ON op.orderId = o.id
+      LEFT JOIN application s ON o.applicationId = s.id
+      WHERE s.id = ${appId}
+      GROUP BY p.id, p.name
+      ORDER BY total_quantity DESC;`);
     return analytics;
   }
 
@@ -188,20 +192,9 @@ export class ProductService {
     }
 
     const LIMIT_ROW = 5;
-
-    // const analytics = await this.repo.manager.query(`
-    //   SELECT p.*, SUM(op.quantity) AS total_quantity
-    //   FROM product p
-    //   LEFT JOIN product_to_order op ON p.id = op.productId
-    //   LEFT JOIN "order" o ON op.orderId = o.id
-    //   LEFT JOIN application s ON o.applicationId = s.id
-    //   WHERE s.id = ${appId}
-    //   GROUP BY p.id, p.name
-    //   ORDER BY total_quantity DESC
-    //   LIMIT ${LIMIT_ROW};`);
-
-    //? NOTES: MySQL Query
-    const analytics = await this.repo.manager.query(`
+    if (this.config.get('databaseType') === DATABASE_TYPE.MYSQL) {
+      //? NOTES: MySQL Query
+      const analytics = await this.repo.manager.query(`
       SELECT p.*, SUM(op.quantity) AS total_quantity
       FROM product p
       LEFT JOIN product_to_order op ON p.id = op.productId 
@@ -212,6 +205,18 @@ export class ProductService {
       ORDER BY total_quantity DESC
       LIMIT ${LIMIT_ROW};`);
 
+      return analytics;
+    }
+    const analytics = await this.repo.manager.query(`
+      SELECT p.*, SUM(op.quantity) AS total_quantity
+      FROM product p
+      LEFT JOIN product_to_order op ON p.id = op.productId
+      LEFT JOIN "order" o ON op.orderId = o.id
+      LEFT JOIN application s ON o.applicationId = s.id
+      WHERE s.id = ${appId}
+      GROUP BY p.id, p.name
+      ORDER BY total_quantity DESC
+      LIMIT ${LIMIT_ROW};`);
     return analytics;
   }
 }

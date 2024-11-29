@@ -8,6 +8,8 @@ import { MSG_EXCEPTION } from 'src/common/constants/messages';
 import { ApplicationsService } from 'src/applications/services/applications.service';
 import { UpdateCustomerDto } from '../dtos/update-customer.dto';
 import { Order } from 'src/orders/entities/order.entity';
+import { DATABASE_TYPE } from 'src/common/constants/global';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class CustomersService {
@@ -16,6 +18,7 @@ export class CustomersService {
     @InjectRepository(Order) private repoOrder: Repository<Order>,
     private usersService: UsersService,
     private applicationsService: ApplicationsService,
+    private readonly config: ConfigService,
   ) {}
 
   async createCustomer(customerData: Partial<Customer>, userId: number, applicationId: number) {
@@ -125,20 +128,24 @@ export class CustomersService {
 
     const LIMIT_ROW = 5;
 
-    // const analytics = await this.repo.manager.query(`
-    //   SELECT c.* , COUNT(o.id) AS total_orders
-    //   FROM customer c
-    //   LEFT JOIN "order" o ON o.customerId = c.id
-    //   LEFT JOIN application s ON o.applicationId = s.id
-    //   WHERE s.id = ${appId}
-    //   GROUP BY o.customerId
-    //   ORDER by total_orders DESC LIMIT ${LIMIT_ROW}`);
+    if (this.config.get('databaseType') === DATABASE_TYPE.MYSQL) {
+      //? NOTES: MySQL Query
+      const analytics = await this.repo.manager.query(`
+        SELECT c.* , COUNT(o.id) AS total_orders
+        FROM customer c 
+        LEFT JOIN \`order\` o ON o.customerId = c.id
+        LEFT JOIN application s ON o.applicationId = s.id
+        WHERE s.id = ${appId}
+        GROUP BY o.customerId
+        ORDER by total_orders DESC LIMIT ${LIMIT_ROW}`);
 
-    //? NOTES: MySQL Query
+      return analytics;
+    }
+
     const analytics = await this.repo.manager.query(`
       SELECT c.* , COUNT(o.id) AS total_orders
-      FROM customer c 
-      LEFT JOIN \`order\` o ON o.customerId = c.id
+      FROM customer c
+      LEFT JOIN "order" o ON o.customerId = c.id
       LEFT JOIN application s ON o.applicationId = s.id
       WHERE s.id = ${appId}
       GROUP BY o.customerId
@@ -148,32 +155,33 @@ export class CustomersService {
   }
 
   async topProductsByCustomer(customerId: number) {
-    // const products = await this.repo.manager.query(`
-    //   SELECT p.*,
-    //   SUM(pto.quantity) AS total_quantity
-    //   FROM customer c
-    //   JOIN "order" o ON c.id = o.customerId
-    //   JOIN product_to_order pto ON o.id = pto.orderId
-    //   JOIN product p ON p.id = pto.productId
-    //   WHERE c.id = ${customerId}
-    //   GROUP BY p.name
-    //   ORDER BY total_quantity DESC;`);
-
-    //? NOTES: MySQL Query
-    const products = await this.repo.manager.query(
-      `
-      SELECT p.*, 
-             SUM(pto.quantity) AS total_quantity
+    if (this.config.get('databaseType') === DATABASE_TYPE.MYSQL) {
+      //? NOTES: MySQL Query
+      const products = await this.repo.manager.query(
+        `
+      SELECT p.*, SUM(pto.quantity) AS total_quantity
       FROM customer c
       JOIN \`order\` o ON c.id = o.customerId
       JOIN product_to_order pto ON o.id = pto.orderId
       JOIN product p ON p.id = pto.productId
       WHERE c.id = ?
       GROUP BY p.id
-      ORDER BY total_quantity DESC;
-    `,
-      [customerId],
-    );
+      ORDER BY total_quantity DESC;`,
+        [customerId],
+      );
+      return products;
+    }
+
+    const products = await this.repo.manager.query(`
+      SELECT p.*,
+      SUM(pto.quantity) AS total_quantity
+      FROM customer c
+      JOIN "order" o ON c.id = o.customerId
+      JOIN product_to_order pto ON o.id = pto.orderId
+      JOIN product p ON p.id = pto.productId
+      WHERE c.id = ${customerId}
+      GROUP BY p.name
+      ORDER BY total_quantity DESC;`);
     return products;
   }
 }
