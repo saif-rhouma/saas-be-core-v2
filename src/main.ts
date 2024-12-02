@@ -4,6 +4,7 @@ import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
 import AllExceptionsFilter from './common/global-filters/all-exceptions.filter';
 import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
+import * as morgan from 'morgan';
 // import * as fs from 'fs';
 
 // const httpsOptions = {
@@ -28,7 +29,9 @@ async function bootstrap() {
   app.useGlobalFilters(new AllExceptionsFilter(httpAdapterHost, logger));
   app.setGlobalPrefix('api');
 
-  await app.listen(process.env.PORT);
+  app.use(morgan('tiny'));
+
+  await app.listen(process.env.PORT, '0.0.0.0');
   console.log(`Server is Running on PORT ${process.env.PORT}`);
 }
 bootstrap();
