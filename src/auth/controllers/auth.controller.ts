@@ -30,13 +30,16 @@ export class AuthController {
     const user = await this.authService.signup(signupData);
     return user;
   }
+
   @Serialize(UserDto)
   @HttpCode(HTTP_CODE.OK)
   @Post('/login')
   async login(@Body() credentials: LoginUserDto) {
+    console.log('---> Enter Post Login');
     const tokens = await this.authService.login(credentials.email, credentials.password);
     return tokens;
   }
+
   @Serialize(UserDto)
   @HttpCode(HTTP_CODE.OK)
   @UseGuards(AuthenticationGuard)
