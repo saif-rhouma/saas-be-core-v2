@@ -7,15 +7,13 @@ import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
 import * as morgan from 'morgan';
 import * as fs from 'fs';
 
-const httpsOptions = {
-  key: fs.readFileSync('./secrets/cert.key'),
-  cert: fs.readFileSync('./secrets/cert.crt'),
-};
+// const httpsOptions = {
+//   key: fs.readFileSync('./secrets/cert.key'),
+//   cert: fs.readFileSync('./secrets/cert.crt'),
+// };
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule, {
-    httpsOptions,
-  });
+  const app = await NestFactory.create(AppModule, { cors: true });
 
   app.enableCors();
 
