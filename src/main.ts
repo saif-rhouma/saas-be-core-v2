@@ -20,7 +20,16 @@ async function bootstrap() {
   const httpAdapterHost = app.get(HttpAdapterHost);
 
   app.enableCors({
-    origin: '*',
+    origin: [
+      'http://localhost:3030',
+      'http://nidhal.site',
+      'http://www.nidhal.site',
+      'http://backend.nidhal.site',
+      'https://nidhal.site',
+      'https://www.nidhal.site',
+      'https://backend.nidhal.site',
+      '*',
+    ],
     methods: 'GET,POST,PUT,DELETE', // Allowed methods
     allowedHeaders: 'Content-Type, Authorization', // Allowed headers
     credentials: true,
