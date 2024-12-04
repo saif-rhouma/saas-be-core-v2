@@ -19,7 +19,12 @@ async function bootstrap() {
   const logger = app.get(WINSTON_MODULE_NEST_PROVIDER);
   const httpAdapterHost = app.get(HttpAdapterHost);
 
-  app.enableCors();
+  app.enableCors({
+    origin: '*',
+    methods: 'GET,POST,PUT,DELETE', // Allowed methods
+    allowedHeaders: 'Content-Type, Authorization', // Allowed headers
+    credentials: true,
+  });
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,
@@ -31,7 +36,7 @@ async function bootstrap() {
 
   app.use(morgan('tiny'));
 
-  await app.listen(process.env.PORT, '0.0.0.0');
+  await app.listen(process.env.PORT);
   console.log(`Server is Running on PORT ${process.env.PORT}`);
 }
 bootstrap();
