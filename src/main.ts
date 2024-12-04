@@ -13,7 +13,13 @@ import * as morgan from 'morgan';
 // };
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule, { cors: true });
+  const app = await NestFactory.create(AppModule);
+
+  app.enableCors({
+    allowedHeaders: ['content-type'],
+    origin: 'http://localhost:3030',
+    credentials: true,
+  });
 
   // Getting the Winston logger
   const logger = app.get(WINSTON_MODULE_NEST_PROVIDER);
