@@ -15,11 +15,15 @@ import * as morgan from 'morgan';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
-  app.enableCors({
-    allowedHeaders: ['content-type'],
-    origin: 'http://localhost:3030',
+  const options = {
+    origin: '*',
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
+    preflightContinue: false,
+    optionsSuccessStatus: 204,
     credentials: true,
-  });
+  };
+
+  app.enableCors(options);
 
   // Getting the Winston logger
   const logger = app.get(WINSTON_MODULE_NEST_PROVIDER);
