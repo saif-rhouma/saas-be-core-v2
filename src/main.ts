@@ -13,27 +13,27 @@ import * as morgan from 'morgan';
 // };
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create(AppModule, { cors: true });
 
   // Getting the Winston logger
   const logger = app.get(WINSTON_MODULE_NEST_PROVIDER);
   const httpAdapterHost = app.get(HttpAdapterHost);
 
-  app.enableCors({
-    origin: [
-      'http://localhost:3030',
-      'http://nidhal.site',
-      'http://www.nidhal.site',
-      'http://backend.nidhal.site',
-      'https://nidhal.site',
-      'https://www.nidhal.site',
-      'https://backend.nidhal.site',
-      '*',
-    ],
-    methods: 'GET,POST,PUT,DELETE', // Allowed methods
-    allowedHeaders: 'Content-Type, Authorization', // Allowed headers
-    credentials: true,
-  });
+  // app.enableCors({
+  //   origin: [
+  //     'http://localhost:3030',
+  //     'http://nidhal.site',
+  //     'http://www.nidhal.site',
+  //     'http://backend.nidhal.site',
+  //     'https://nidhal.site',
+  //     'https://www.nidhal.site',
+  //     'https://backend.nidhal.site',
+  //     '*',
+  //   ],
+  //   methods: 'GET,POST,PUT,DELETE', // Allowed methods
+  //   allowedHeaders: 'Content-Type, Authorization', // Allowed headers
+  //   credentials: true,
+  // });
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,
