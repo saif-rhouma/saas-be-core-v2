@@ -50,6 +50,11 @@ export class Application {
   @Column({
     nullable: true,
   })
+  appCover: string;
+
+  @Column({
+    nullable: true,
+  })
   favicon: string;
 
   @Column({

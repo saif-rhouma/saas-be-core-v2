@@ -24,6 +24,7 @@ export class AuthController {
     private applicationsService: ApplicationsService,
     private permissionsService: PermissionsService,
   ) {}
+
   @Serialize(UserDto)
   @Post('/signup')
   async createSimpleUser(@Body() signupData: CreateSimpleUserDto) {
@@ -35,7 +36,6 @@ export class AuthController {
   @HttpCode(HTTP_CODE.OK)
   @Post('/login')
   async login(@Body() credentials: LoginUserDto) {
-    console.log('--> https ');
     const tokens = await this.authService.login(credentials.email, credentials.password);
     return tokens;
   }

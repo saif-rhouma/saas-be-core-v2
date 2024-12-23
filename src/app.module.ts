@@ -52,6 +52,7 @@ import { Quotation } from './quotations/entities/quotation.entity';
 import { ProductToQuotation } from './quotations/entities/product_quotation.entity';
 import configuration from './common/configs/config';
 import { DATABASE_TYPE } from './common/constants/global';
+import { ProposalsModule } from './proposals/proposals.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -181,6 +182,7 @@ import { DATABASE_TYPE } from './common/constants/global';
     SeedersModule,
     NotificationsModule,
     QuotationsModule,
+    ProposalsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

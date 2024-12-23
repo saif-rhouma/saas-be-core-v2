@@ -19,7 +19,6 @@ export class ProductsController {
   @UseGuards(AuthenticationGuard)
   @Post('/create')
   async createProduct(@Body() productData: CreateProductDto, @GetUser() user: Partial<User>) {
-    console.log('---> Enter Post Product');
     const appId = getApplicationId(user);
     return this.productsService.create(productData, appId);
   }

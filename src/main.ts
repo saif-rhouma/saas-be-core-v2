@@ -5,7 +5,7 @@ import { ValidationPipe } from '@nestjs/common';
 import AllExceptionsFilter from './common/global-filters/all-exceptions.filter';
 import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
 import * as morgan from 'morgan';
-import * as fs from 'fs';
+// import * as fs from 'fs';
 
 // const httpsOptions = {
 //   key: fs.readFileSync('./secrets/cert.key'),

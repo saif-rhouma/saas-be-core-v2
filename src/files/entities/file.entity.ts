@@ -17,6 +17,7 @@ export enum FileCategory {
   Category = 'Category',
   AppAvatar = 'AppAvatar',
   AppLogo = 'AppLogo',
+  AppCover = 'AppCover',
   Avatar = 'Avatar',
 }
 
