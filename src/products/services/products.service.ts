@@ -83,14 +83,6 @@ export class ProductService {
     }
   }
 
-  // async remove(id: number) {
-  //   const product = await this.findOne(id);
-  //   if (!product) {
-  //     throw new NotFoundException(MSG_EXCEPTION.NOT_FOUND_PRODUCT);
-  //   }
-  //   return this.repo.remove(product);
-  // }
-
   async remove(id: number, appId: number) {
     if (!id || !appId) {
       return null;
@@ -104,19 +96,34 @@ export class ProductService {
     return this.repo.save(product);
   }
 
-  // findAll(appId: number) {
-  //   return this.repo.find({
-  //     where: { application: { id: appId } },
-  //     relations: { stock: true, productToOrder: { order: true }, application: true },
-  //   });
-  // }
-
   async findAll(appId: number) {
-    // const products = await this.repo.find({
-    //   where: { application: { id: appId } },
-    //   relations: { stock: true, productToOrder: { order: { customer: true } }, application: true, category: true },
-    //   order: { id: 'DESC', productToOrder: { order: { ref: 'ASC' } } },
-    // });
+    if (this.config.get('databaseType') === DATABASE_TYPE.POSTGRESQL) {
+      const products = await this.repo
+        .createQueryBuilder('product')
+        .leftJoinAndSelect('product.stock', 'stock')
+        .leftJoinAndSelect('product.productToOrder', 'productToOrder')
+        .leftJoinAndSelect('productToOrder.order', 'order')
+        .leftJoinAndSelect('order.customer', 'customer')
+        .leftJoinAndSelect('product.application', 'application')
+        .leftJoinAndSelect('product.category', 'category')
+        .where('application.id = :appId', { appId })
+        .andWhere('product.isHidden = :isHidden', { isHidden: false })
+        .orderBy('product.id', 'DESC')
+        .addOrderBy(
+          `
+    CAST(
+      REGEXP_REPLACE(order.ref, '\\D', '', 'g') AS INTEGER
+    )
+  `,
+          'ASC',
+        ) // Extract numeric part for sorting
+        .getMany();
+      products.forEach((prod) => {
+        const filtered = prod.productToOrder.filter((item) => item?.order?.status !== OrderStatus.Draft);
+        prod.productToOrder = filtered.slice(0, 6);
+      });
+      return products;
+    }
 
     const products = await this.repo
       .createQueryBuilder('product')
@@ -131,6 +138,7 @@ export class ProductService {
       .orderBy('product.id', 'DESC')
       .addOrderBy('CAST(SUBSTRING(order.ref, 4) AS UNSIGNED)', 'ASC') // Extract numeric part for sorting
       .getMany();
+
     products.forEach((prod) => {
       const filtered = prod.productToOrder.filter((item) => item?.order?.status !== OrderStatus.Draft);
       prod.productToOrder = filtered.slice(0, 6);
@@ -159,18 +167,32 @@ export class ProductService {
     if (!appId) {
       return null;
     }
-    if (this.config.get('databaseType') === DATABASE_TYPE.MYSQL) {
+    if (
+      this.config.get('databaseType') === DATABASE_TYPE.MYSQL ||
+      this.config.get('databaseType') === DATABASE_TYPE.POSTGRESQL
+    ) {
       //? NOTES: MySQL Query
-      const analytics = await this.repo.manager.query(`
-      SELECT p.*, SUM(op.quantity) AS total_quantity
+
+      const stringQuery =
+        this.config.get('databaseType') !== DATABASE_TYPE.POSTGRESQL
+          ? `SELECT p.*, SUM(op.quantity) AS total_quantity
       FROM product p
       LEFT JOIN product_to_order op ON p.id = op.productId 
       LEFT JOIN \`order\` o ON op.orderId = o.id
       LEFT JOIN application s ON o.applicationId = s.id
       WHERE s.id = ${appId}
       GROUP BY p.id, p.name
-      ORDER BY total_quantity DESC;
-    `);
+      ORDER BY total_quantity DESC;`
+          : ` SELECT p.*, SUM(op.quantity) AS total_quantity
+      FROM product p
+      LEFT JOIN product_to_order op ON p.id = op."productId"
+      LEFT JOIN "order" o ON op."orderId" = o.id
+      LEFT JOIN application s ON o."applicationId" = s.id
+      WHERE s.id = ${appId}
+      GROUP BY p.id, p.name
+      ORDER BY total_quantity DESC;`;
+
+      const analytics = await this.repo.manager.query(stringQuery);
 
       return analytics;
     }
@@ -192,10 +214,15 @@ export class ProductService {
     }
 
     const LIMIT_ROW = 5;
-    if (this.config.get('databaseType') === DATABASE_TYPE.MYSQL) {
+    if (
+      this.config.get('databaseType') === DATABASE_TYPE.MYSQL ||
+      this.config.get('databaseType') === DATABASE_TYPE.POSTGRESQL
+    ) {
       //? NOTES: MySQL Query
-      const analytics = await this.repo.manager.query(`
-      SELECT p.*, SUM(op.quantity) AS total_quantity
+
+      const stringQuery =
+        this.config.get('databaseType') !== DATABASE_TYPE.POSTGRESQL
+          ? `SELECT p.*, SUM(op.quantity) AS total_quantity
       FROM product p
       LEFT JOIN product_to_order op ON p.id = op.productId 
       LEFT JOIN \`order\` o ON op.orderId = o.id
@@ -203,7 +230,18 @@ export class ProductService {
       WHERE s.id = ${appId}
       GROUP BY p.id, p.name 
       ORDER BY total_quantity DESC
-      LIMIT ${LIMIT_ROW};`);
+      LIMIT ${LIMIT_ROW};`
+          : ` SELECT p.*, SUM(op.quantity) AS total_quantity
+      FROM product p
+      LEFT JOIN product_to_order op ON p.id = op."productId"
+      LEFT JOIN "order" o ON op."orderId" = o.id
+      LEFT JOIN application s ON o."applicationId" = s.id
+      WHERE s.id = ${appId}
+      GROUP BY p.id, p.name 
+      ORDER BY total_quantity DESC
+      LIMIT ${LIMIT_ROW}`;
+
+      const analytics = await this.repo.manager.query(stringQuery);
 
       return analytics;
     }

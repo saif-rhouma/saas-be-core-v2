@@ -701,40 +701,35 @@ Make sure disabled buttons don't get the pointer cursor.
           -webkit-print-color-adjust: exact;
         }
       }
-      .top-bar {
-        width: 100%;
-        height: 14px;
-        background-color: #ffbd59;
-        z-index: 1;
-      }
       footer > svg{
+        position: fixed;
         z-index: 999;
         bottom:  0;
         left: 50%;
         transform: translateX(-50%);
-        position: absolute;
       }
 
       footer > .bottom-bar-dark{
+        position: fixed;
         bottom: 0;
         width: 40%;
         left: 0;
         height: 38px;
         background-color: #121415;
         z-index: 1;
-        position: absolute;
       }
       footer > .bottom-bar-green{
+        position: fixed;
         bottom: 0;
         width: 40%;
         right: 0;
         height: 38px;
-        position: absolute;
         background-color: #0CBB97;
         z-index: 1;
       } 
-
-      .top-bar {
+      header {
+        position: fixed;
+        top: 0;
         width: 30%;
         height: 28px;
         background-color: #0CBB97;
@@ -755,11 +750,14 @@ Make sure disabled buttons don't get the pointer cursor.
       .zi-999{
         z-index: 9999;
       }
+      .conditional-section {
+        page-break-before: always;
+        margin-top: 30px;
+      }
     </style>
   </head>
 
   <header>
-    <div class="top-bar"></div>
       <svg class="top-bar-img" width="341" height="28" viewBox="0 0 341 28" fill="none" xmlns="http://www.w3.org/2000/svg">
         <path d="M316.464 28H0V0H341L316.464 28Z" fill="#0CBB97"/>
       </svg>
@@ -802,7 +800,7 @@ Make sure disabled buttons don't get the pointer cursor.
                               Date
                             </p>
                             <p class="whitespace-nowrap text-right">
-                            ${dayjs().format('MMMM DD, YYYY')}
+                            ${dayjs(order.orderDate).format('MMMM DD, YYYY')}
                             </p>
                           </div>
                         </td>
@@ -1006,8 +1004,8 @@ Make sure disabled buttons don't get the pointer cursor.
     
 
 
-    <div style="position: absolute; bottom: 50px;">
-      <div class=" py-6 text-sm">
+    <div class="${order.productToOrder?.length > 8 && 'conditional-section'}">
+      <div class="py-6 text-sm">
         <table class="w-full border-collapse border-spacing-0">
           <tbody>
             <tr>

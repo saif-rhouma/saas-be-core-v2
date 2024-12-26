@@ -10,4 +10,5 @@ export const enum NODE_ENV {
 export const enum DATABASE_TYPE {
   SQLITE = 'sqlite',
   MYSQL = 'mysql',
+  POSTGRESQL = 'postgres',
 }

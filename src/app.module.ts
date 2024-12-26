@@ -130,7 +130,44 @@ import { ProposalsModule } from './proposals/proposals.module';
               ProductToQuotation,
             ],
           };
+        } else if (config.get('databaseType') === DATABASE_TYPE.POSTGRESQL) {
+          return {
+            type: 'postgres',
+            host: config.get('database.host'),
+            port: config.get('database.port'),
+            username: config.get('database.username'),
+            password: config.get('database.password'),
+            database: config.get<string>('database.dbName'),
+            synchronize: true,
+            logging: ['query', 'error'],
+            entities: [
+              User,
+              RefreshToken,
+              Permission,
+              Role,
+              Product,
+              Application,
+              Plan,
+              Customer,
+              Order,
+              ProductToOrder,
+              Payment,
+              Ticket,
+              TicketMessage,
+              Stock,
+              Supplying,
+              File,
+              Reminder,
+              ProductAddon,
+              Financial,
+              Category,
+              PermissionsGroup,
+              Quotation,
+              ProductToQuotation,
+            ],
+          };
         }
+        console.log('---> SQLite');
         //! NOTES : THIS CONFIGS IS ONLY FOR LOCAL DEV SETUP
         return {
           type: 'sqlite',

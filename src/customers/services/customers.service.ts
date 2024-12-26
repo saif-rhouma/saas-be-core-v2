@@ -128,17 +128,33 @@ export class CustomersService {
 
     const LIMIT_ROW = 5;
 
-    if (this.config.get('databaseType') === DATABASE_TYPE.MYSQL) {
+    if (
+      this.config.get('databaseType') === DATABASE_TYPE.MYSQL ||
+      this.config.get('databaseType') === DATABASE_TYPE.POSTGRESQL
+    ) {
       //? NOTES: MySQL Query
-      const analytics = await this.repo.manager.query(`
+
+      const stringQuery =
+        this.config.get('databaseType') !== DATABASE_TYPE.POSTGRESQL
+          ? `
         SELECT c.* , COUNT(o.id) AS total_orders
         FROM customer c 
         LEFT JOIN \`order\` o ON o.customerId = c.id
         LEFT JOIN application s ON o.applicationId = s.id
         WHERE s.id = ${appId}
         GROUP BY o.customerId
-        ORDER by total_orders DESC LIMIT ${LIMIT_ROW}`);
+        ORDER by total_orders DESC
+        LIMIT ${LIMIT_ROW};`
+          : `  SELECT c.*, COUNT(o.id) AS total_orders
+        FROM customer c
+        LEFT JOIN "order" o ON o."customerId" = c.id
+        LEFT JOIN application s ON o."applicationId" = s.id
+        WHERE s.id =${appId}
+        GROUP BY c.id
+        ORDER BY total_orders DESC
+        LIMIT ${LIMIT_ROW};`;
 
+      const analytics = await this.repo.manager.query(stringQuery);
       return analytics;
     }
 
@@ -155,7 +171,10 @@ export class CustomersService {
   }
 
   async topProductsByCustomer(customerId: number) {
-    if (this.config.get('databaseType') === DATABASE_TYPE.MYSQL) {
+    if (
+      this.config.get('databaseType') === DATABASE_TYPE.MYSQL ||
+      this.config.get('databaseType') === DATABASE_TYPE.POSTGRESQL
+    ) {
       //? NOTES: MySQL Query
       const products = await this.repo.manager.query(
         `

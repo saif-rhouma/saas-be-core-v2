@@ -90,7 +90,10 @@ export class TicketsService {
     if (!appId) {
       return null;
     }
-    if (this.config.get('databaseType') === DATABASE_TYPE.MYSQL) {
+    if (
+      this.config.get('databaseType') === DATABASE_TYPE.MYSQL ||
+      this.config.get('databaseType') === DATABASE_TYPE.POSTGRESQL
+    ) {
       //? NOTES: MySQL Query
       const tickets = await this.repo.manager.query(
         `
@@ -239,7 +242,10 @@ export class TicketsService {
     if (!appId) {
       return null;
     }
-    if (this.config.get('databaseType') === DATABASE_TYPE.MYSQL) {
+    if (
+      this.config.get('databaseType') === DATABASE_TYPE.MYSQL ||
+      this.config.get('databaseType') === DATABASE_TYPE.POSTGRESQL
+    ) {
       //? NOTES: MySQL Query
       const analytics = await this.repo.manager.query(
         `SELECT 

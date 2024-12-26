@@ -40,7 +40,10 @@ export class PdfService {
     await page.setContent(htmlContent, { waitUntil: 'domcontentloaded' });
 
     // Generate the PDF and save it to the file system
-    await page.pdf({ path: outputFilePath, format: 'A4' });
+    await page.pdf({
+      path: outputFilePath,
+      format: 'A4',
+    });
 
     // Close the browser after generating the PDF
     await browser.close();

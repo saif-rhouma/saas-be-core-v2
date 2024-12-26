@@ -701,23 +701,25 @@ Make sure disabled buttons don't get the pointer cursor.
           -webkit-print-color-adjust: exact;
         }
       }
-      .top-bar {
+      header{
+        z-index: 999;
+        position: fixed;
+        background-color: #ffbd59;
         width: 100%;
         height: 14px;
-        background-color: #ffbd59;
-        z-index: 1;
+        top:  0;
       }
       footer svg{
         z-index: 999;
+        position: fixed;
         bottom:  0;
         left: 0;
-        position: absolute;
       }
       .top-bar-img {
         z-index: 999;
+        position: fixed;
         top: 0;
         right: 0;
-        position: absolute;
       }
       .main-background-color {
         background-color: #ffbd59;
@@ -725,21 +727,23 @@ Make sure disabled buttons don't get the pointer cursor.
       .tr-background-color {
         background-color: #E7E7E7;
       }
+      .conditional-section {
+        page-break-before: always;
+        margin-top: 50px;
+      }
     </style>
   </head>
 
   <body>
     <header>
-      <div class="top-bar"></div>
       <svg class="top-bar-img" width="340" height="51" viewBox="0 0 340 51" fill="none" xmlns="http://www.w3.org/2000/svg">
         <path d="M0 0L340 -1V25H20.5282L0 0Z" fill="#222222"/>
         <path d="M244.5 25H282L263.5 51H226L244.5 25Z" fill="#B87C21"/>
         <path d="M110 25H244L263.5 51H129.5L110 25Z" fill="#FFBD59"/>
         <path d="M91 0H225L244.5 26H110.5L91 0Z" fill="#FFBD59"/>
         </svg>
-        
     </header>
-    <div class="py-4">
+    <div class="py-4" style="margin-top:20px">
       <div class="px-14 py-6">
         <table class="w-full border-collapse border-spacing-0">
           <tbody>
@@ -778,7 +782,7 @@ Make sure disabled buttons don't get the pointer cursor.
                             </p>
                            
                             <p class="whitespace-nowrap text-right">
-                            ${dayjs().format('MMMM DD, YYYY')}
+                            ${dayjs(quotation.quotationDate).format('MMMM DD, YYYY')}
                             </p>
                           </div>
                         </td>
@@ -975,12 +979,9 @@ Make sure disabled buttons don't get the pointer cursor.
           </tbody>
         </table>
       </div>
-    
 
-
-
-<div style="position: absolute; bottom: 50px;">
-      <div class=" py-6 text-sm">
+    <div>
+      <div class="${quotation.productToQuotation?.length > 8 && 'conditional-section'} py-6 text-sm">
         <table class="w-full border-collapse border-spacing-0">
           <tbody>
             <tr>
@@ -1018,7 +1019,6 @@ Make sure disabled buttons don't get the pointer cursor.
         </table>
       </div>
     </div>
-
         <footer>
           <svg width="338" height="40" viewBox="0 0 296 35" fill="none" xmlns="http://www.w3.org/2000/svg">
             <path d="M289.5 27H0V35H296L289.5 27Z" fill="#222222"/>

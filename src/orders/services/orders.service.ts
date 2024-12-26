@@ -328,7 +328,10 @@ export class OrdersService {
 
   async updateAmount(order: Order) {
     try {
-      if (this.config.get('databaseType') === DATABASE_TYPE.MYSQL) {
+      if (
+        this.config.get('databaseType') === DATABASE_TYPE.MYSQL ||
+        this.config.get('databaseType') === DATABASE_TYPE.POSTGRESQL
+      ) {
         //? NOTES: MySQL Query
         const [{ total }] = await this.repo.manager.query(
           `SELECT SUM(p.amount) as total
@@ -362,7 +365,10 @@ export class OrdersService {
 
   async syncAmount(payment: Payment, order: Order) {
     try {
-      if (this.config.get('databaseType') === DATABASE_TYPE.MYSQL) {
+      if (
+        this.config.get('databaseType') === DATABASE_TYPE.MYSQL ||
+        this.config.get('databaseType') === DATABASE_TYPE.POSTGRESQL
+      ) {
         //? NOTES: MySQL Query
         const [{ total }] = await this.repo.manager.query(
           `SELECT SUM(p.amount) as total
@@ -397,7 +403,10 @@ export class OrdersService {
       if (!appId) {
         return null;
       }
-      if (this.config.get('databaseType') === DATABASE_TYPE.MYSQL) {
+      if (
+        this.config.get('databaseType') === DATABASE_TYPE.MYSQL ||
+        this.config.get('databaseType') === DATABASE_TYPE.POSTGRESQL
+      ) {
         //? NOTES: MySQL Query
         const analytics = await this.repo.manager.query(
           `SELECT 
@@ -525,21 +534,37 @@ export class OrdersService {
 
       const categories = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
-      if (this.config.get('databaseType') === DATABASE_TYPE.MYSQL) {
+      if (
+        this.config.get('databaseType') === DATABASE_TYPE.MYSQL ||
+        this.config.get('databaseType') === DATABASE_TYPE.POSTGRESQL
+      ) {
         //? NOTES: MySQL Query
-        const queryRes = await this.repo
-          .createQueryBuilder('order')
-          .select('YEAR(order.orderDate)', 'year')
-          .addSelect('MONTH(order.orderDate)', 'month')
-          .addSelect(`SUM(CASE WHEN order.status = '${OrderStatus.Ready}' THEN 1 ELSE 0 END)`, 'readyCount')
-          .addSelect(`SUM(CASE WHEN order.status = '${OrderStatus.Delivered}' THEN 1 ELSE 0 END)`, 'deliveredCount')
-          .addSelect(`SUM(CASE WHEN order.status = '${OrderStatus.InProcess}' THEN 1 ELSE 0 END)`, 'progressCount')
-          .where('order.applicationId = :appId', { appId })
-          .groupBy('year')
-          .addGroupBy('month')
-          .orderBy('year', 'ASC')
-          .addOrderBy('month', 'ASC')
-          .getRawMany();
+
+        const stringQuery =
+          this.config.get('databaseType') !== DATABASE_TYPE.POSTGRESQL
+            ? `SELECT 
+                 YEAR(o.orderDate) AS year,
+                 MONTH(o.orderDate) AS month,
+                 SUM(CASE WHEN o.status = '${OrderStatus.Ready}' THEN 1 ELSE 0 END) AS readyCount,
+                 SUM(CASE WHEN o.status = '${OrderStatus.Delivered}' THEN 1 ELSE 0 END) AS deliveredCount,
+                 SUM(CASE WHEN o.status = '${OrderStatus.InProcess}' THEN 1 ELSE 0 END) AS progressCount
+               FROM "order" o
+               WHERE o.applicationId = ${appId}
+               GROUP BY year, month
+               ORDER BY year ASC, month ASC;`
+            : `
+            SELECT 
+              EXTRACT(YEAR FROM o."orderDate") AS year,
+              EXTRACT(MONTH FROM o."orderDate") AS month,
+              SUM(CASE WHEN o.status = '${OrderStatus.Ready}' THEN 1 ELSE 0 END) AS "readyCount",
+              SUM(CASE WHEN o.status = '${OrderStatus.Delivered}' THEN 1 ELSE 0 END) AS "deliveredCount",
+              SUM(CASE WHEN o.status = '${OrderStatus.InProcess}' THEN 1 ELSE 0 END) AS "progressCount"
+            FROM "order" o
+            WHERE o."applicationId" = ${appId}
+            GROUP BY year, month
+            ORDER BY year ASC, month ASC;
+          `;
+        const queryRes = await this.repo.manager.query(stringQuery);
 
         const seriesData: { [year: string]: { Ready: number[]; Delivered: number[]; InProcess: number[] } } = {};
 
@@ -571,16 +596,17 @@ export class OrdersService {
         };
 
         //? NOTES: MySQL Query
-        const analytics = await this.repo.manager.query(
-          `SELECT 
-        SUM(CASE WHEN status = '${OrderStatus.Ready}' THEN 1 ELSE 0 END) AS Ready,
-        SUM(CASE WHEN status = '${OrderStatus.Delivered}' THEN 1 ELSE 0 END) AS Delivered,
-        SUM(CASE WHEN status = '${OrderStatus.Draft}' THEN 1 ELSE 0 END) AS Draft,
-        SUM(CASE WHEN status = '${OrderStatus.InProcess}' THEN 1 ELSE 0 END) AS InProcess,
-        COUNT(*) AS Total
-      FROM \`order\`
-      WHERE applicationId = ${appId};`,
-        );
+
+        const analyticsQuery = `SELECT 
+                    SUM(CASE WHEN status = '${OrderStatus.Ready}' THEN 1 ELSE 0 END) AS "Ready",
+                    SUM(CASE WHEN status = '${OrderStatus.Delivered}' THEN 1 ELSE 0 END) AS "Delivered",
+                    SUM(CASE WHEN status = '${OrderStatus.Draft}' THEN 1 ELSE 0 END) AS "Draft",
+                    SUM(CASE WHEN status = '${OrderStatus.InProcess}' THEN 1 ELSE 0 END) AS "InProcess",
+                    COUNT(*) AS "Total"
+                FROM "order"
+                WHERE "applicationId" = ${appId};`;
+
+        const analytics = await this.repo.manager.query(analyticsQuery);
 
         //? NOTES: MySQL Query
         const readyLastSixMonth = await this.repo.manager.query(

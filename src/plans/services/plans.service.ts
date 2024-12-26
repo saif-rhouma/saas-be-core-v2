@@ -209,7 +209,10 @@ export class PlansService {
   }
 
   async getStockPlan(appId: number) {
-    if (this.config.get('databaseType') === DATABASE_TYPE.MYSQL) {
+    if (
+      this.config.get('databaseType') === DATABASE_TYPE.MYSQL ||
+      this.config.get('databaseType') === DATABASE_TYPE.POSTGRESQL
+    ) {
       //? NOTES: MySQL Query
       const res = await this.repo.manager.query(
         `SELECT 
