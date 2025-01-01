@@ -982,6 +982,44 @@ Make sure disabled buttons don't get the pointer cursor.
 
     <div>
       <div class="${quotation.productToQuotation?.length > 8 && 'conditional-section'} py-6 text-sm">
+
+            ${
+              quotation.productToQuotation?.length > 8
+                ? ` <div class="px-14 py-6 text-sm">
+        <table class="w-full border-collapse border-spacing-0">
+          <tbody>
+            <tr>
+              <td class="w-1/2 align-top">
+                <div class="text-sm text-neutral-600">
+                  <p class="font-bold">${quotation.application?.name}</p>
+                  <p>Number: ${quotation?.application?.phoneNumber}</p>
+                  <p>Tax/Vat: ${quotation?.application?.taxNumber}</p>
+                  <p>${quotation.application?.address?.city}</p>
+                  <p>${quotation.application?.address?.state}</p>
+                  <p>${quotation.application?.address?.country}</p>
+                </div>
+              </td>
+              <td class="w-1/2 align-top text-right">
+                <div class="text-sm text-neutral-600">
+                  <p
+                    class="font-bold"
+                    style="text-transform: capitalize !important"
+                  >
+                    ${quotation.customer.name}
+                  </p>
+                  <p>Number: ${quotation.customer.phoneNumber}</p>
+                  <p>Tax/Vat: ${quotation.customer.taxNumber}</p>
+                  <p>${quotation.customer?.address?.street}</p>
+                  <p>${quotation.customer?.address?.country}</p>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>`
+                : ''
+            }
+
         <table class="w-full border-collapse border-spacing-0">
           <tbody>
             <tr>

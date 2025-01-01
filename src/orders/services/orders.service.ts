@@ -20,6 +20,7 @@ import { ProductOrderService } from './product-order.service';
 import { Payment } from 'src/payments/entities/payment.entity';
 import { ConfigService } from '@nestjs/config';
 import { DATABASE_TYPE } from 'src/common/constants/global';
+import { QuotationsService } from 'src/quotations/services/quotations.service';
 
 @Injectable()
 export class OrdersService {
@@ -32,6 +33,7 @@ export class OrdersService {
     private productsService: ProductService,
     private stockService: StockService,
     private plansService: PlansService,
+    private quotationsService: QuotationsService,
     private readonly config: ConfigService,
     @Inject('winston')
     private readonly logger: Logger,
@@ -92,11 +94,6 @@ export class OrdersService {
     if (!appId || isNaN(appId)) {
       return null;
     }
-    // const orders = this.repo.find({
-    //   where: { application: { id: appId } },
-    //   relations: ['productToOrder', 'productToOrder.product', 'customer'],
-    //   order: { ref: 'ASC' },
-    // });
     const orders = await this.repo
       .createQueryBuilder('order')
       .leftJoinAndSelect('order.createdBy', 'user')
@@ -313,6 +310,9 @@ export class OrdersService {
     const order = await this.findOneByApplication(id, appId);
     if (!order) {
       throw new NotFoundException(MSG_EXCEPTION.NOT_FOUND_ORDER);
+    }
+    if (order.quotation) {
+      await this.quotationsService.remove(order.quotation.id, appId);
     }
     return this.update(id, appId, { status: OrderStatus.Canceled });
   }

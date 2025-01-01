@@ -17,7 +17,7 @@ import { QuotationsModule } from 'src/quotations/quotations.module';
   imports: [
     UsersModule,
     ApplicationsModule,
-    QuotationsModule,
+    forwardRef(() => QuotationsModule),
     TypeOrmModule.forFeature([User, Application, Reminder]),
     forwardRef(() => NotificationsModule),
   ],

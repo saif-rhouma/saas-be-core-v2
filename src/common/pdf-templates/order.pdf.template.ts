@@ -1005,6 +1005,45 @@ Make sure disabled buttons don't get the pointer cursor.
 
 
     <div class="${order.productToOrder?.length > 8 && 'conditional-section'}">
+
+    ${
+      order.productToOrder?.length > 8
+        ? `      <div class="px-14 py-6 text-sm">
+        <table class="w-full border-collapse border-spacing-0">
+          <tbody>
+            <tr>
+              <td class="w-1/2 align-top">
+                <div class="text-sm text-neutral-600">
+                  <p class="font-bold">${order.application?.name}</p>
+                  <p>Number: ${order?.application?.phoneNumber}</p>
+                  <p>Tax/Vat: ${order?.application?.taxNumber}</p>
+                  <p>${order.application?.address?.city}</p>
+                  <p>${order.application?.address?.state}</p>
+                  <p>${order.application?.address?.country}</p>
+                </div>
+              </td>
+              <td class="w-1/2 align-top text-right">
+                <div class="text-sm text-neutral-600">
+                  <p
+                    class="font-bold"
+                    style="text-transform: capitalize !important"
+                  >
+                    ${order.customer.name}
+                  </p>
+                  <p>Number: ${order.customer.phoneNumber}</p>
+                  <p>Tax/Vat: ${order.customer.taxNumber}</p>
+                  <p>${order.customer?.address?.street}</p>
+                  <p>${order.customer?.address?.country}</p>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+`
+        : ''
+    }
+
       <div class="py-6 text-sm">
         <table class="w-full border-collapse border-spacing-0">
           <tbody>

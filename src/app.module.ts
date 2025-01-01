@@ -173,7 +173,7 @@ import { ProposalsModule } from './proposals/proposals.module';
           type: 'sqlite',
           database: 'db.dev.sqlite',
           synchronize: true,
-          logging: ['query', 'error'],
+          logging: ['error'],
           entities: [
             User,
             RefreshToken,

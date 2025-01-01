@@ -43,6 +43,16 @@ export class PdfService {
     await page.pdf({
       path: outputFilePath,
       format: 'A4',
+      margin: {
+        bottom: '10in', // Add space for footer
+      },
+      displayHeaderFooter: true, // Enable header and footer
+      footerTemplate: `
+        <div style="z-index: 999999; font-size:12px; text-align:center; width:100%; color:#000; padding-bottom: 24px ">
+          Page <span class="pageNumber"></span> of <span class="totalPages"></span>
+        </div>
+      `,
+      printBackground: true, // Include background colors/images
     });
 
     // Close the browser after generating the PDF

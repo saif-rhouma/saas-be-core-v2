@@ -1,5 +1,5 @@
 /* eslint-disable prettier/prettier */
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { OrdersController } from './controllers/orders.controller';
 import { OrdersService } from './services/orders.service';
 import { UsersModule } from 'src/users/users.module';
@@ -20,6 +20,7 @@ import { StockModule } from 'src/stock/stock.module';
 import { PlansModule } from 'src/plans/plans.module';
 import { OrderSubscriber } from './subscribers/order.subscriber';
 import { FilesModule } from 'src/files/files.module';
+import { QuotationsModule } from 'src/quotations/quotations.module';
 
 @Module({
   controllers: [OrdersController, OrdersStatusController],
@@ -33,6 +34,7 @@ import { FilesModule } from 'src/files/files.module';
     StockModule,
     TypeOrmModule.forFeature([Plan, User, Application, Customer, Product, Order, ProductToOrder]),
     FilesModule,
+    forwardRef(() => QuotationsModule),
   ],
   exports: [OrdersService],
 })

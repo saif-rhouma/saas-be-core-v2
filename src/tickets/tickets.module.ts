@@ -22,7 +22,7 @@ import { QuotationsModule } from 'src/quotations/quotations.module';
   imports: [
     UsersModule,
     ApplicationsModule,
-    QuotationsModule,
+    forwardRef(() => QuotationsModule),
     forwardRef(() => NotificationsModule),
     TypeOrmModule.forFeature([User, Application, Ticket, TicketMessage]),
   ],

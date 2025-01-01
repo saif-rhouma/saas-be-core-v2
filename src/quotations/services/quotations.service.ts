@@ -1,5 +1,5 @@
 /* eslint-disable prettier/prettier */
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { forwardRef, Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { Quotation, QuotationStatus } from '../entities/quotation.entity';
 import { Not, Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -24,6 +24,7 @@ export class QuotationsService {
     private customersService: CustomersService,
     private applicationsService: ApplicationsService,
     private productQuotationService: ProductQuotationService,
+    @Inject(forwardRef(() => OrdersService))
     private ordersService: OrdersService,
     private productsService: ProductService,
   ) {}
@@ -309,9 +310,9 @@ export class QuotationsService {
     if (!id || !appId) {
       return null;
     }
-    const order = await this.findOneByApplication(id, appId);
-    if (!order) {
-      throw new NotFoundException(MSG_EXCEPTION.NOT_FOUND_ORDER);
+    const quotation = await this.findOneByApplication(id, appId);
+    if (!quotation) {
+      throw new NotFoundException(MSG_EXCEPTION.NOT_FOUND_QUOTATION);
     }
     return this.update(id, appId, { status: QuotationStatus.Canceled });
   }

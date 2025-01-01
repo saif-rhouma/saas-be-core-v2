@@ -27,7 +27,7 @@ import { NotificationsModule } from 'src/notifications/notifications.module';
     CustomersModule,
     ProductsModule,
     ApplicationsModule,
-    OrdersModule,
+    forwardRef(() => OrdersModule),
     TypeOrmModule.forFeature([User, Application, Customer, Product, Order, ProductToQuotation, Quotation]),
     FilesModule,
     forwardRef(() => NotificationsModule),

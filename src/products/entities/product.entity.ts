@@ -8,6 +8,11 @@ import { Column, Entity, ManyToOne, OneToMany, OneToOne, PrimaryGeneratedColumn 
 import { Category } from './category.entity';
 import { ProductToQuotation } from 'src/quotations/entities/product_quotation.entity';
 
+export interface ProdSpec {
+  label: string;
+  value: string;
+}
+
 @Entity()
 export class Product {
   @PrimaryGeneratedColumn()
@@ -40,6 +45,11 @@ export class Product {
     default: false,
   })
   isHidden: boolean;
+
+  @Column('simple-json', {
+    nullable: true,
+  })
+  specifications: ProdSpec[];
 
   @ManyToOne(() => Application, (application) => application.products)
   application: Application;
