@@ -15,6 +15,8 @@ import { OrdersService } from 'src/orders/services/orders.service';
 import { CreateOrderDto, ProductQty } from 'src/orders/dtos/create-order.dto';
 import { RoleType } from 'src/common/constants/roles';
 import { PermissionType } from 'src/common/constants/permissions';
+import { QUOTATIONS_QUERIES } from './query.string';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class QuotationsService {
@@ -27,6 +29,7 @@ export class QuotationsService {
     @Inject(forwardRef(() => OrdersService))
     private ordersService: OrdersService,
     private productsService: ProductService,
+    private readonly config: ConfigService,
   ) {}
 
   async createQuotation(quotationData: CreateQuotationDto, userId: number, applicationId: number) {
@@ -166,17 +169,22 @@ export class QuotationsService {
     if (user.roles.map((role) => role.name).includes(RoleType.STAFF)) {
       // TODO PermissionType.LIST_ORDER SHOULD BE CHANGED !!!
       if (!user.permissions.map((permission) => permission.slug).includes(PermissionType.GROUP_QUOTATION_LIST)) {
-        const quotations = await this.repo
-          .createQueryBuilder('quotation')
-          .leftJoinAndSelect('quotation.createdBy', 'user')
-          .leftJoinAndSelect('quotation.productToQuotation', 'productToQuotation')
-          .leftJoinAndSelect('productToQuotation.product', 'product')
-          .leftJoinAndSelect('quotation.order', 'order')
-          .leftJoinAndSelect('quotation.customer', 'customer')
-          .where('quotation.applicationId = :appId', { appId })
-          .andWhere('quotation.createdBy = :userId', { userId })
-          .orderBy('CAST(SUBSTRING(quotation.ref, 4, LENGTH(quotation.ref)) AS UNSIGNED)', 'ASC')
-          .getMany();
+        const quotationsStringQuery = QUOTATIONS_QUERIES.findAllByApplicationAdvance[this.config.get('databaseType')](
+          appId,
+          userId,
+        );
+        const quotations = await this.repo.manager.query(quotationsStringQuery);
+        // const quotations = await this.repo
+        //   .createQueryBuilder('quotation')
+        //   .leftJoinAndSelect('quotation.createdBy', 'user')
+        //   .leftJoinAndSelect('quotation.productToQuotation', 'productToQuotation')
+        //   .leftJoinAndSelect('productToQuotation.product', 'product')
+        //   .leftJoinAndSelect('quotation.order', 'order')
+        //   .leftJoinAndSelect('quotation.customer', 'customer')
+        //   .where('quotation.applicationId = :appId', { appId })
+        //   .andWhere('quotation.createdBy = :userId', { userId })
+        //   .orderBy('CAST(SUBSTRING(quotation.ref, 4, LENGTH(quotation.ref)) AS UNSIGNED)', 'ASC')
+        //   .getMany();
         if (!quotations) {
           throw new NotFoundException(MSG_EXCEPTION.NOT_FOUND_QUOTATION);
         }
@@ -184,16 +192,20 @@ export class QuotationsService {
       }
     }
 
-    const quotations = await this.repo
-      .createQueryBuilder('quotation')
-      .leftJoinAndSelect('quotation.createdBy', 'user')
-      .leftJoinAndSelect('quotation.productToQuotation', 'productToQuotation')
-      .leftJoinAndSelect('productToQuotation.product', 'product')
-      .leftJoinAndSelect('quotation.order', 'order')
-      .leftJoinAndSelect('quotation.customer', 'customer')
-      .where('quotation.applicationId = :appId', { appId })
-      .orderBy('CAST(SUBSTRING(quotation.ref, 4, LENGTH(quotation.ref)) AS UNSIGNED)', 'ASC')
-      .getMany();
+    const quotationsStringQuery =
+      QUOTATIONS_QUERIES.findAllByApplicationAdvanceAdmin[this.config.get('databaseType')](appId);
+    const quotations = await this.repo.manager.query(quotationsStringQuery);
+
+    // const quotations = await this.repo
+    //   .createQueryBuilder('quotation')
+    //   .leftJoinAndSelect('quotation.createdBy', 'user')
+    //   .leftJoinAndSelect('quotation.productToQuotation', 'productToQuotation')
+    //   .leftJoinAndSelect('productToQuotation.product', 'product')
+    //   .leftJoinAndSelect('quotation.order', 'order')
+    //   .leftJoinAndSelect('quotation.customer', 'customer')
+    //   .where('quotation.applicationId = :appId', { appId })
+    //   .orderBy('CAST(SUBSTRING(quotation.ref, 4, LENGTH(quotation.ref)) AS UNSIGNED)', 'ASC')
+    //   .getMany();
 
     if (!quotations) {
       throw new NotFoundException(MSG_EXCEPTION.NOT_FOUND_QUOTATION);
@@ -311,6 +323,7 @@ export class QuotationsService {
       return null;
     }
     const quotation = await this.findOneByApplication(id, appId);
+
     if (!quotation) {
       throw new NotFoundException(MSG_EXCEPTION.NOT_FOUND_QUOTATION);
     }

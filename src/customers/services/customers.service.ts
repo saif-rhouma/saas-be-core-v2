@@ -8,8 +8,8 @@ import { MSG_EXCEPTION } from 'src/common/constants/messages';
 import { ApplicationsService } from 'src/applications/services/applications.service';
 import { UpdateCustomerDto } from '../dtos/update-customer.dto';
 import { Order } from 'src/orders/entities/order.entity';
-import { DATABASE_TYPE } from 'src/common/constants/global';
 import { ConfigService } from '@nestjs/config';
+import { CUSTOMER_QUERIES } from './query.string';
 
 @Injectable()
 export class CustomersService {
@@ -128,79 +128,15 @@ export class CustomersService {
 
     const LIMIT_ROW = 5;
 
-    if (
-      this.config.get('databaseType') === DATABASE_TYPE.MYSQL ||
-      this.config.get('databaseType') === DATABASE_TYPE.POSTGRESQL
-    ) {
-      //? NOTES: MySQL Query
-
-      const stringQuery =
-        this.config.get('databaseType') !== DATABASE_TYPE.POSTGRESQL
-          ? `
-        SELECT c.* , COUNT(o.id) AS total_orders
-        FROM customer c 
-        LEFT JOIN \`order\` o ON o.customerId = c.id
-        LEFT JOIN application s ON o.applicationId = s.id
-        WHERE s.id = ${appId}
-        GROUP BY o.customerId
-        ORDER by total_orders DESC
-        LIMIT ${LIMIT_ROW};`
-          : `  SELECT c.*, COUNT(o.id) AS total_orders
-        FROM customer c
-        LEFT JOIN "order" o ON o."customerId" = c.id
-        LEFT JOIN application s ON o."applicationId" = s.id
-        WHERE s.id =${appId}
-        GROUP BY c.id
-        ORDER BY total_orders DESC
-        LIMIT ${LIMIT_ROW};`;
-
-      const analytics = await this.repo.manager.query(stringQuery);
-      return analytics;
-    }
-
-    const analytics = await this.repo.manager.query(`
-      SELECT c.* , COUNT(o.id) AS total_orders
-      FROM customer c
-      LEFT JOIN "order" o ON o.customerId = c.id
-      LEFT JOIN application s ON o.applicationId = s.id
-      WHERE s.id = ${appId}
-      GROUP BY o.customerId
-      ORDER by total_orders DESC LIMIT ${LIMIT_ROW}`);
+    const stringQuery = CUSTOMER_QUERIES.topFiveCustomers[this.config.get('databaseType')](appId, LIMIT_ROW);
+    const analytics = await this.repo.manager.query(stringQuery);
 
     return analytics;
   }
 
   async topProductsByCustomer(customerId: number) {
-    if (
-      this.config.get('databaseType') === DATABASE_TYPE.MYSQL ||
-      this.config.get('databaseType') === DATABASE_TYPE.POSTGRESQL
-    ) {
-      //? NOTES: MySQL Query
-      const products = await this.repo.manager.query(
-        `
-      SELECT p.*, SUM(pto.quantity) AS total_quantity
-      FROM customer c
-      JOIN \`order\` o ON c.id = o.customerId
-      JOIN product_to_order pto ON o.id = pto.orderId
-      JOIN product p ON p.id = pto.productId
-      WHERE c.id = ?
-      GROUP BY p.id
-      ORDER BY total_quantity DESC;`,
-        [customerId],
-      );
-      return products;
-    }
-
-    const products = await this.repo.manager.query(`
-      SELECT p.*,
-      SUM(pto.quantity) AS total_quantity
-      FROM customer c
-      JOIN "order" o ON c.id = o.customerId
-      JOIN product_to_order pto ON o.id = pto.orderId
-      JOIN product p ON p.id = pto.productId
-      WHERE c.id = ${customerId}
-      GROUP BY p.name
-      ORDER BY total_quantity DESC;`);
+    const stringQuery = CUSTOMER_QUERIES.topProductsByCustomer[this.config.get('databaseType')](customerId);
+    const products = await this.repo.manager.query(stringQuery);
     return products;
   }
 }

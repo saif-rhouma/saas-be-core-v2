@@ -21,6 +21,7 @@ import { Payment } from 'src/payments/entities/payment.entity';
 import { ConfigService } from '@nestjs/config';
 import { DATABASE_TYPE } from 'src/common/constants/global';
 import { QuotationsService } from 'src/quotations/services/quotations.service';
+import { ORDERS_QUERIES } from './query.string';
 
 @Injectable()
 export class OrdersService {
@@ -119,16 +120,21 @@ export class OrdersService {
     if (user.roles.map((role) => role.name).includes(RoleType.STAFF)) {
       // TODO PermissionType.LIST_ORDER SHOULD BE CHANGED !!!
       if (!user.permissions.map((permission) => permission.slug).includes(PermissionType.GROUP_ORDER_LIST)) {
-        const orders = await this.repo
-          .createQueryBuilder('order')
-          .leftJoinAndSelect('order.createdBy', 'user')
-          .leftJoinAndSelect('order.productToOrder', 'productToOrder')
-          .leftJoinAndSelect('productToOrder.product', 'product')
-          .leftJoinAndSelect('order.customer', 'customer')
-          .where('order.applicationId = :appId', { appId })
-          .andWhere('order.createdBy = :userId', { userId })
-          .orderBy('CAST(SUBSTRING(order.ref, 4, LENGTH(order.ref)) AS UNSIGNED)', 'ASC')
-          .getMany();
+        // const orders = await this.repo
+        //   .createQueryBuilder('order')
+        //   .leftJoinAndSelect('order.createdBy', 'user')
+        //   .leftJoinAndSelect('order.productToOrder', 'productToOrder')
+        //   .leftJoinAndSelect('productToOrder.product', 'product')
+        //   .leftJoinAndSelect('order.customer', 'customer')
+        //   .where('order.applicationId = :appId', { appId })
+        //   .andWhere('order.createdBy = :userId', { userId })
+        //   .orderBy('CAST(SUBSTRING(order.ref, 4, LENGTH(order.ref)) AS UNSIGNED)', 'ASC')
+        //   .getMany();
+        const ordersStringQuery = ORDERS_QUERIES.findAllByApplicationAdvanced.staff[this.config.get('databaseType')](
+          appId,
+          userId,
+        );
+        const orders = await this.repo.manager.query(ordersStringQuery);
         if (!orders) {
           throw new NotFoundException(MSG_EXCEPTION.NOT_FOUND_ORDER);
         }
@@ -136,15 +142,18 @@ export class OrdersService {
       }
     }
 
-    const orders = await this.repo
-      .createQueryBuilder('order')
-      .leftJoinAndSelect('order.createdBy', 'user')
-      .leftJoinAndSelect('order.productToOrder', 'productToOrder')
-      .leftJoinAndSelect('productToOrder.product', 'product')
-      .leftJoinAndSelect('order.customer', 'customer')
-      .where('order.applicationId = :appId', { appId })
-      .orderBy('CAST(SUBSTRING(order.ref, 4, LENGTH(order.ref)) AS UNSIGNED)', 'ASC')
-      .getMany();
+    const ordersStringQuery = ORDERS_QUERIES.findAllByApplicationAdvanced.admin[this.config.get('databaseType')](appId);
+    const orders = await this.repo.manager.query(ordersStringQuery);
+
+    // const orders = await this.repo
+    //   .createQueryBuilder('order')
+    //   .leftJoinAndSelect('order.createdBy', 'user')
+    //   .leftJoinAndSelect('order.productToOrder', 'productToOrder')
+    //   .leftJoinAndSelect('productToOrder.product', 'product')
+    //   .leftJoinAndSelect('order.customer', 'customer')
+    //   .where('order.applicationId = :appId', { appId })
+    //   .orderBy('CAST(SUBSTRING(order.ref, 4, LENGTH(order.ref)) AS UNSIGNED)', 'ASC')
+    //   .getMany();
 
     if (!orders) {
       throw new NotFoundException(MSG_EXCEPTION.NOT_FOUND_ORDER);
@@ -328,35 +337,11 @@ export class OrdersService {
 
   async updateAmount(order: Order) {
     try {
-      if (
-        this.config.get('databaseType') === DATABASE_TYPE.MYSQL ||
-        this.config.get('databaseType') === DATABASE_TYPE.POSTGRESQL
-      ) {
-        //? NOTES: MySQL Query
-        const [{ total }] = await this.repo.manager.query(
-          `SELECT SUM(p.amount) as total
-         FROM \`order\` o
-         LEFT JOIN payment p ON p.orderId = o.id
-         WHERE o.id = ?;`,
-          [order.id],
-        );
-
-        if (total) {
-          order.orderPaymentAmount = total;
-          await this.repo.save(order);
-        }
-      } else {
-        const [{ total }] = await this.repo.manager.query(
-          `SELECT SUM(p.amount) as total
-          FROM "order" o LEFT JOIN payment p
-          ON p.orderId = o.id
-          WHERE o.id = '${order.id}';`,
-        );
-
-        if (total) {
-          order.orderPaymentAmount = total;
-          await this.repo.save(order);
-        }
+      const queryString = ORDERS_QUERIES.updateAmount[this.config.get('databaseType')](order.id);
+      const [{ total }] = await this.repo.manager.query(queryString);
+      if (total) {
+        order.orderPaymentAmount = total;
+        await this.repo.save(order);
       }
     } catch (error) {
       console.log(error);
@@ -365,33 +350,11 @@ export class OrdersService {
 
   async syncAmount(payment: Payment, order: Order) {
     try {
-      if (
-        this.config.get('databaseType') === DATABASE_TYPE.MYSQL ||
-        this.config.get('databaseType') === DATABASE_TYPE.POSTGRESQL
-      ) {
-        //? NOTES: MySQL Query
-        const [{ total }] = await this.repo.manager.query(
-          `SELECT SUM(p.amount) as total
-         FROM \`order\` o
-         LEFT JOIN payment p ON p.orderId = o.id
-         WHERE o.id = ? AND p.id <> ?;`,
-          [order.id, payment.id],
-        );
-        if (total) {
-          order.orderPaymentAmount = parseInt(total) + payment.amount;
-          await this.repo.save(order);
-        }
-      } else {
-        const [{ total }] = await this.repo.manager.query(
-          `SELECT SUM(p.amount) as total
-        FROM "order" o LEFT JOIN payment p
-        ON p.orderId = o.id
-        WHERE o.id = '${order.id}' AND p.id <> ${payment.id};`,
-        );
-        if (total) {
-          order.orderPaymentAmount = parseInt(total) + payment.amount;
-          await this.repo.save(order);
-        }
+      const queryString = ORDERS_QUERIES.syncAmount[this.config.get('databaseType')](order.id, payment.id);
+      const [{ total }] = await this.repo.manager.query(queryString);
+      if (total) {
+        order.orderPaymentAmount = parseInt(total) + payment.amount;
+        await this.repo.save(order);
       }
     } catch (error) {
       console.log(error);
@@ -407,71 +370,24 @@ export class OrdersService {
         this.config.get('databaseType') === DATABASE_TYPE.MYSQL ||
         this.config.get('databaseType') === DATABASE_TYPE.POSTGRESQL
       ) {
-        //? NOTES: MySQL Query
-        const analytics = await this.repo.manager.query(
-          `SELECT 
-          SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) AS Ready,
-          SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) AS Delivered,
-          SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) AS InProcess
-       FROM \`order\`
-       WHERE applicationId = ?;`,
-          [OrderStatus.Ready, OrderStatus.Delivered, OrderStatus.InProcess, appId],
-        );
-        //? NOTES: MySQL Query
-        const inProcessLastSixMonth = await this.repo.manager.query(
-          `SELECT 
-            COUNT(id) AS ClaimsPerMonth,
-            MONTH(orderDate) AS inMonth,
-            YEAR(orderDate) AS inYear
-         FROM \`order\`
-         WHERE orderDate >= DATE_SUB(CURDATE(), INTERVAL 7 MONTH)
-           AND status = ?
-           AND applicationId = ?
-         GROUP BY YEAR(orderDate), MONTH(orderDate)
-         ORDER BY inYear, inMonth;`,
-          [OrderStatus.InProcess, appId],
-        );
-        //? NOTES: MySQL Query
-        const readyLastSixMonth = await this.repo.manager.query(
-          `SELECT 
-            COUNT(id) AS ClaimsPerMonth,
-            MONTH(orderDate) AS inMonth,
-            YEAR(orderDate) AS inYear
-         FROM \`order\`
-         WHERE orderDate >= DATE_SUB(CURDATE(), INTERVAL 7 MONTH)
-           AND status = ?
-           AND applicationId = ?
-         GROUP BY YEAR(orderDate), MONTH(orderDate)
-         ORDER BY inYear, inMonth;`,
-          [OrderStatus.Ready, appId],
-        );
-        //? NOTES: MySQL Query
-        const deliveredLastSixMonth = await this.repo.manager.query(
-          `SELECT 
-            COUNT(id) AS ClaimsPerMonth,
-            MONTH(orderDate) AS inMonth,
-            YEAR(orderDate) AS inYear
-         FROM \`order\`
-         WHERE orderDate >= DATE_SUB(CURDATE(), INTERVAL 7 MONTH)
-           AND status = ?
-           AND applicationId = ?
-         GROUP BY YEAR(orderDate), MONTH(orderDate)
-         ORDER BY inYear, inMonth;`,
-          [OrderStatus.Delivered, appId],
-        );
-        //? NOTES: MySQL Query
-        const lastSixMonth = await this.repo.manager.query(
-          `SELECT 
-            COUNT(id) AS ClaimsPerMonth,
-            MONTH(orderDate) AS inMonth,
-            YEAR(orderDate) AS inYear
-         FROM \`order\`
-         WHERE orderDate >= DATE_SUB(CURDATE(), INTERVAL 7 MONTH)
-           AND applicationId = ?
-         GROUP BY YEAR(orderDate), MONTH(orderDate)
-         ORDER BY inYear, inMonth;`,
-          [appId],
-        );
+        const analyticsQueryString = ORDERS_QUERIES.analytics.base[this.config.get('databaseType')](appId);
+        const analytics = await this.repo.manager.query(analyticsQueryString);
+
+        const inProcessLastSixMonthQueryString =
+          ORDERS_QUERIES.analytics.inProcessLastSixMonth[this.config.get('databaseType')](appId);
+        const inProcessLastSixMonth = await this.repo.manager.query(inProcessLastSixMonthQueryString);
+
+        const readyLastSixMonthQueryString =
+          ORDERS_QUERIES.analytics.inProcessLastSixMonth[this.config.get('databaseType')](appId);
+        const readyLastSixMonth = await this.repo.manager.query(readyLastSixMonthQueryString);
+
+        const deliveredLastSixMonthQueryString =
+          ORDERS_QUERIES.analytics.deliveredLastSixMonth[this.config.get('databaseType')](appId);
+        const deliveredLastSixMonth = await this.repo.manager.query(deliveredLastSixMonthQueryString);
+
+        const lastSixMonthQueryString =
+          ORDERS_QUERIES.analytics.deliveredLastSixMonth[this.config.get('databaseType')](appId);
+        const lastSixMonth = await this.repo.manager.query(lastSixMonthQueryString);
 
         return {
           analytics: analytics[0],
@@ -481,6 +397,7 @@ export class OrdersService {
           inProcessLastSixMonth,
         };
       }
+
       const analytics = await this.repo.manager.query(
         `select SUM(CASE WHEN status = '${OrderStatus.Ready}' THEN 1 ELSE 0 END) As Ready,
       SUM(CASE WHEN status = '${OrderStatus.Delivered}' THEN 1 ELSE 0 END) AS Delivered,
@@ -539,32 +456,9 @@ export class OrdersService {
         this.config.get('databaseType') === DATABASE_TYPE.POSTGRESQL
       ) {
         //? NOTES: MySQL Query
-
-        const stringQuery =
-          this.config.get('databaseType') !== DATABASE_TYPE.POSTGRESQL
-            ? `SELECT 
-                 YEAR(o.orderDate) AS year,
-                 MONTH(o.orderDate) AS month,
-                 SUM(CASE WHEN o.status = '${OrderStatus.Ready}' THEN 1 ELSE 0 END) AS readyCount,
-                 SUM(CASE WHEN o.status = '${OrderStatus.Delivered}' THEN 1 ELSE 0 END) AS deliveredCount,
-                 SUM(CASE WHEN o.status = '${OrderStatus.InProcess}' THEN 1 ELSE 0 END) AS progressCount
-               FROM "order" o
-               WHERE o.applicationId = ${appId}
-               GROUP BY year, month
-               ORDER BY year ASC, month ASC;`
-            : `
-            SELECT 
-              EXTRACT(YEAR FROM o."orderDate") AS year,
-              EXTRACT(MONTH FROM o."orderDate") AS month,
-              SUM(CASE WHEN o.status = '${OrderStatus.Ready}' THEN 1 ELSE 0 END) AS "readyCount",
-              SUM(CASE WHEN o.status = '${OrderStatus.Delivered}' THEN 1 ELSE 0 END) AS "deliveredCount",
-              SUM(CASE WHEN o.status = '${OrderStatus.InProcess}' THEN 1 ELSE 0 END) AS "progressCount"
-            FROM "order" o
-            WHERE o."applicationId" = ${appId}
-            GROUP BY year, month
-            ORDER BY year ASC, month ASC;
-          `;
-        const queryRes = await this.repo.manager.query(stringQuery);
+        const seriesDataStringQuery =
+          ORDERS_QUERIES.analyticsAdvance.seriesData[this.config.get('databaseType')](appId);
+        const queryRes = await this.repo.manager.query(seriesDataStringQuery);
 
         const seriesData: { [year: string]: { Ready: number[]; Delivered: number[]; InProcess: number[] } } = {};
 
@@ -595,89 +489,28 @@ export class OrdersService {
           series,
         };
 
-        //? NOTES: MySQL Query
-
-        const analyticsQuery = `SELECT 
-                    SUM(CASE WHEN status = '${OrderStatus.Ready}' THEN 1 ELSE 0 END) AS "Ready",
-                    SUM(CASE WHEN status = '${OrderStatus.Delivered}' THEN 1 ELSE 0 END) AS "Delivered",
-                    SUM(CASE WHEN status = '${OrderStatus.Draft}' THEN 1 ELSE 0 END) AS "Draft",
-                    SUM(CASE WHEN status = '${OrderStatus.InProcess}' THEN 1 ELSE 0 END) AS "InProcess",
-                    COUNT(*) AS "Total"
-                FROM "order"
-                WHERE "applicationId" = ${appId};`;
+        const analyticsQuery = ORDERS_QUERIES.analyticsAdvance.analytics[this.config.get('databaseType')](appId);
 
         const analytics = await this.repo.manager.query(analyticsQuery);
+        const readyLastSixMonthStringQuery =
+          ORDERS_QUERIES.analyticsAdvance.analytics[this.config.get('databaseType')](appId);
+        const readyLastSixMonth = await this.repo.manager.query(readyLastSixMonthStringQuery);
 
-        //? NOTES: MySQL Query
-        const readyLastSixMonth = await this.repo.manager.query(
-          `SELECT COUNT(id) AS ClaimsPerMonth,
-                MONTH(orderDate) AS inMonth,
-                YEAR(orderDate) AS inYear
-        FROM \`order\`
-        WHERE orderDate >= DATE_SUB(CURDATE(), INTERVAL 7 MONTH) AND status = '${OrderStatus.Ready}' 
-        AND applicationId = ${appId}
-        GROUP BY YEAR(orderDate), MONTH(orderDate)
-        ORDER BY inYear, inMonth;`,
-        );
+        const draftLastSixMonthStringQuery =
+          ORDERS_QUERIES.analyticsAdvance.analytics[this.config.get('databaseType')](appId);
+        const draftLastSixMonth = await this.repo.manager.query(draftLastSixMonthStringQuery);
 
-        //? NOTES: MySQL Query
-        const draftLastSixMonth = await this.repo.manager.query(
-          `SELECT 
-            COUNT(id) AS ClaimsPerMonth,
-            MONTH(orderDate) AS inMonth,
-            YEAR(orderDate) AS inYear
-         FROM \`order\`
-         WHERE orderDate >= DATE_SUB(CURDATE(), INTERVAL 7 MONTH)
-           AND status = ?
-           AND applicationId = ?
-         GROUP BY YEAR(orderDate), MONTH(orderDate)
-         ORDER BY inYear, inMonth;`,
-          [OrderStatus.Draft, appId],
-        );
+        const inProcessLastSixMonthStringQuery =
+          ORDERS_QUERIES.analyticsAdvance.analytics[this.config.get('databaseType')](appId);
+        const inProcessLastSixMonth = await this.repo.manager.query(inProcessLastSixMonthStringQuery);
 
-        //? NOTES: MySQL Query
-        const inProcessLastSixMonth = await this.repo.manager.query(
-          `SELECT 
-            COUNT(id) AS ClaimsPerMonth,
-            MONTH(orderDate) AS inMonth,
-            YEAR(orderDate) AS inYear
-         FROM \`order\`
-         WHERE orderDate >= DATE_SUB(CURDATE(), INTERVAL 7 MONTH)
-           AND status = ?
-           AND applicationId = ?
-         GROUP BY YEAR(orderDate), MONTH(orderDate)
-         ORDER BY inYear, inMonth;`,
-          [OrderStatus.InProcess, appId],
-        );
+        const deliveredLastSixMonthStringQuery =
+          ORDERS_QUERIES.analyticsAdvance.analytics[this.config.get('databaseType')](appId);
+        const deliveredLastSixMonth = await this.repo.manager.query(deliveredLastSixMonthStringQuery);
 
-        //? NOTES: MySQL Query
-        const deliveredLastSixMonth = await this.repo.manager.query(
-          `SELECT 
-            COUNT(id) AS ClaimsPerMonth,
-            MONTH(orderDate) AS inMonth,
-            YEAR(orderDate) AS inYear
-         FROM \`order\`
-         WHERE orderDate >= DATE_SUB(CURDATE(), INTERVAL 7 MONTH)
-           AND status = ?
-           AND applicationId = ?
-         GROUP BY YEAR(orderDate), MONTH(orderDate)
-         ORDER BY inYear, inMonth;`,
-          [OrderStatus.Delivered, appId],
-        );
-
-        //? NOTES: MySQL Query
-        const lastSixMonth = await this.repo.manager.query(
-          `SELECT 
-            COUNT(id) AS ClaimsPerMonth,
-            MONTH(orderDate) AS inMonth,
-            YEAR(orderDate) AS inYear
-         FROM \`order\`
-         WHERE orderDate >= DATE_SUB(CURDATE(), INTERVAL 7 MONTH)
-           AND applicationId = ?
-         GROUP BY YEAR(orderDate), MONTH(orderDate)
-         ORDER BY inYear, inMonth;`,
-          [appId],
-        );
+        const lastSixMonthStringQuery =
+          ORDERS_QUERIES.analyticsAdvance.analytics[this.config.get('databaseType')](appId);
+        const lastSixMonth = await this.repo.manager.query(lastSixMonthStringQuery);
 
         return {
           analytics: analytics[0],
@@ -733,60 +566,27 @@ export class OrdersService {
         series,
       };
 
-      const analytics = await this.repo.manager.query(
-        `select SUM(CASE WHEN status = '${OrderStatus.Ready}' THEN 1 ELSE 0 END) As Ready,
-      SUM(CASE WHEN status = '${OrderStatus.Delivered}' THEN 1 ELSE 0 END) AS Delivered,
-      SUM(CASE WHEN status = '${OrderStatus.Draft}' THEN 1 ELSE 0 END) AS Draft,
-      SUM(CASE WHEN status = '${OrderStatus.InProcess}' THEN 1 ELSE 0 END) AS InProcess,
-      COUNT(*) AS Total
-      from 'order'
-      where applicationId = ${appId};`,
-      );
+      const analyticsQuery = ORDERS_QUERIES.analyticsAdvance.analytics[this.config.get('databaseType')](appId);
 
-      const readyLastSixMonth = await this.repo.manager.query(
-        `SELECT  COUNT(id) AS ClaimsPerMonth,
-      (strftime('%m', orderDate)) AS inMonth,
-      (strftime('%Y', orderDate)) AS inYear  FROM 'order'
-      WHERE orderDate >= DATE('now', '-7 months') and status = '${OrderStatus.Ready}' and applicationId = ${appId}
-      GROUP BY strftime('%Y', orderDate), strftime('%m', orderDate)
-      ORDER BY inYear, inMonth`,
-      );
+      const analytics = await this.repo.manager.query(analyticsQuery);
+      const readyLastSixMonthStringQuery =
+        ORDERS_QUERIES.analyticsAdvance.analytics[this.config.get('databaseType')](appId);
+      const readyLastSixMonth = await this.repo.manager.query(readyLastSixMonthStringQuery);
 
-      const draftLastSixMonth = await this.repo.manager.query(
-        `SELECT  COUNT(id) AS ClaimsPerMonth,
-      (strftime('%m', orderDate)) AS inMonth,
-      (strftime('%Y', orderDate)) AS inYear  FROM 'order'
-      WHERE orderDate >= DATE('now', '-7 months') and status = '${OrderStatus.Draft}' and applicationId = ${appId}
-      GROUP BY strftime('%Y', orderDate), strftime('%m', orderDate)
-      ORDER BY inYear, inMonth`,
-      );
+      const draftLastSixMonthStringQuery =
+        ORDERS_QUERIES.analyticsAdvance.analytics[this.config.get('databaseType')](appId);
+      const draftLastSixMonth = await this.repo.manager.query(draftLastSixMonthStringQuery);
 
-      const inProcessLastSixMonth = await this.repo.manager.query(
-        `SELECT  COUNT(id) AS ClaimsPerMonth,
-      (strftime('%m', orderDate)) AS inMonth,
-      (strftime('%Y', orderDate)) AS inYear  FROM 'order'
-      WHERE orderDate >= DATE('now', '-7 months') and status = '${OrderStatus.InProcess}' and applicationId = ${appId}
-      GROUP BY strftime('%Y', orderDate), strftime('%m', orderDate)
-      ORDER BY inYear, inMonth`,
-      );
+      const inProcessLastSixMonthStringQuery =
+        ORDERS_QUERIES.analyticsAdvance.analytics[this.config.get('databaseType')](appId);
+      const inProcessLastSixMonth = await this.repo.manager.query(inProcessLastSixMonthStringQuery);
 
-      const deliveredLastSixMonth = await this.repo.manager.query(
-        `SELECT  COUNT(id) AS ClaimsPerMonth,
-      (strftime('%m', orderDate)) AS inMonth,
-      (strftime('%Y', orderDate)) AS inYear  FROM 'order'
-      WHERE orderDate >= DATE('now', '-7 months') and status = '${OrderStatus.Delivered}' and applicationId = ${appId}
-      GROUP BY strftime('%Y', orderDate), strftime('%m', orderDate)
-      ORDER BY inYear, inMonth`,
-      );
+      const deliveredLastSixMonthStringQuery =
+        ORDERS_QUERIES.analyticsAdvance.analytics[this.config.get('databaseType')](appId);
+      const deliveredLastSixMonth = await this.repo.manager.query(deliveredLastSixMonthStringQuery);
 
-      const lastSixMonth = await this.repo.manager.query(
-        `SELECT  COUNT(id) AS ClaimsPerMonth,
-      (strftime('%m', orderDate)) AS inMonth,
-      (strftime('%Y', orderDate)) AS inYear  FROM 'order'
-      WHERE orderDate >= DATE('now', '-7 months') and applicationId = ${appId}
-      GROUP BY strftime('%Y', orderDate), strftime('%m', orderDate)
-      ORDER BY inYear, inMonth`,
-      );
+      const lastSixMonthStringQuery = ORDERS_QUERIES.analyticsAdvance.analytics[this.config.get('databaseType')](appId);
+      const lastSixMonth = await this.repo.manager.query(lastSixMonthStringQuery);
 
       return {
         analytics: analytics[0],

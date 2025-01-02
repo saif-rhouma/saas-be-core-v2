@@ -9,8 +9,8 @@ import { Repository } from 'typeorm';
 import { Plan, PlanStatus } from '../entities/plan.entity';
 import { StockService } from 'src/stock/services/stock.service';
 import { Order } from 'src/orders/entities/order.entity';
-import { DATABASE_TYPE } from 'src/common/constants/global';
 import { ConfigService } from '@nestjs/config';
+import { PLANS_QUERIES } from './query.string';
 
 @Injectable()
 export class PlansService {
@@ -84,15 +84,8 @@ export class PlansService {
     //   where: { application: { id: appId } },
     //   relations: { product: true, createdBy: true, order: true },
     // });
-
-    const plans = await this.repo
-      .createQueryBuilder('plan')
-      .leftJoinAndSelect('plan.createdBy', 'user')
-      .leftJoinAndSelect('plan.order', 'order')
-      .leftJoinAndSelect('plan.product', 'product')
-      .where('plan.applicationId = :appId', { appId })
-      .orderBy('CAST(SUBSTRING(plan.ref, 4, LENGTH(plan.ref)) AS UNSIGNED)', 'ASC')
-      .getMany();
+    const plansQueryString = PLANS_QUERIES.findAllByApplication[this.config.get('databaseType')](appId);
+    const plans = await this.repo.manager.query(plansQueryString);
 
     if (!plans) {
       throw new NotFoundException(MSG_EXCEPTION.NOT_FOUND_PLAN);
@@ -209,44 +202,8 @@ export class PlansService {
   }
 
   async getStockPlan(appId: number) {
-    if (
-      this.config.get('databaseType') === DATABASE_TYPE.MYSQL ||
-      this.config.get('databaseType') === DATABASE_TYPE.POSTGRESQL
-    ) {
-      //? NOTES: MySQL Query
-      const res = await this.repo.manager.query(
-        `SELECT 
-          pln.productId, 
-          prod.name, 
-          prod.image,
-          SUM(CASE WHEN status = ? THEN pln.quantity ELSE 0 END) AS ready_quantity,
-          SUM(CASE WHEN status = ? THEN pln.quantity ELSE 0 END) AS pending_quantity,
-          SUM(CASE WHEN status = ? THEN pln.quantity ELSE 0 END) AS processing_a_quantity,
-          SUM(CASE WHEN status = ? THEN pln.quantity ELSE 0 END) AS processing_b_quantity,
-          SUM(pln.quantity) AS totals_quantity
-       FROM \`plan\` pln
-       JOIN product prod ON prod.id = pln.productId 
-       WHERE pln.applicationId = ?
-       GROUP BY pln.productId;`,
-        [PlanStatus.Ready, PlanStatus.Pending, PlanStatus.ProcessingA, PlanStatus.ProcessingB, appId],
-      );
-
-      return res;
-    }
-
-    const res = await this.repo.manager.query(
-      `SELECT
-    pln.productId, prod.name, prod.image,
-    SUM(CASE WHEN status = '${PlanStatus.Ready}' THEN pln.quantity ELSE 0 END) AS ready_quantity,
-    SUM(CASE WHEN status = '${PlanStatus.Pending}' THEN pln.quantity ELSE 0 END) AS pending_quantity,
-    SUM(CASE WHEN status = '${PlanStatus.ProcessingA}' THEN pln.quantity ELSE 0 END) AS processing_a_quantity,
-    SUM(CASE WHEN status = '${PlanStatus.ProcessingB}' THEN pln.quantity ELSE 0 END) AS processing_b_quantity,
-    SUM(pln.quantity) AS totals_quantity
-    FROM "plan" pln
-    JOIN product prod ON prod.id = pln.productId
-    WHERE pln.applicationId = ${appId}
-    GROUP BY pln.productId;`,
-    );
+    const queryString = PLANS_QUERIES.getStockPlan[this.config.get('databaseType')](appId);
+    const res = await this.repo.manager.query(queryString);
     return res;
   }
 

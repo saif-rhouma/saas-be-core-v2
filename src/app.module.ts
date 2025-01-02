@@ -139,7 +139,7 @@ import { ProposalsModule } from './proposals/proposals.module';
             password: config.get('database.password'),
             database: config.get<string>('database.dbName'),
             synchronize: true,
-            logging: ['query', 'error'],
+            logging: ['error'],
             entities: [
               User,
               RefreshToken,

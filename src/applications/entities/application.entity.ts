@@ -30,6 +30,10 @@ enum PrintPOSType {
   A4 = 'A4',
   Thermal = 'Thermal',
 }
+export interface TermsCondition {
+  title: string;
+  description: string;
+}
 @Entity()
 export class Application {
   @PrimaryGeneratedColumn()
@@ -102,6 +106,11 @@ export class Application {
     zipCode: string;
     street: string;
   };
+
+  @Column('simple-json', {
+    nullable: true,
+  })
+  terms: TermsCondition[];
 
   @ManyToOne(() => User, (user) => user.userOwnedApps)
   owner: User;

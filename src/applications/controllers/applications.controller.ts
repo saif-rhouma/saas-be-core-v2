@@ -10,6 +10,7 @@ import { Serialize } from 'src/common/interceptors/serialize.interceptor';
 import { MSG_EXCEPTION } from 'src/common/constants/messages';
 import getApplicationId from 'src/common/helpers/application-id.func';
 import { UpdateApplicationDto } from '../dtos/update-application.dto';
+import { CreateTermsApplicationDto } from '../dtos/create-term-application.dto';
 
 @Controller('applications')
 export class ApplicationsController {
@@ -31,6 +32,12 @@ export class ApplicationsController {
       throw new NotFoundException(MSG_EXCEPTION.NOT_FOUND_APPLICATION);
     }
     return application;
+  }
+
+  @UseGuards(AuthenticationGuard)
+  @Post('/terms')
+  async createTerms(@Body() bodyData: CreateTermsApplicationDto) {
+    return this.applicationsService.addTermsAndConditions(bodyData.appId, bodyData.terms);
   }
 
   @Get('/:id')

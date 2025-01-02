@@ -1,7 +1,7 @@
 /* eslint-disable prettier/prettier */
 import { forwardRef, Inject, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Application } from '../entities/application.entity';
+import { Application, TermsCondition } from '../entities/application.entity';
 import { Repository } from 'typeorm';
 import { MSG_EXCEPTION } from 'src/common/constants/messages';
 import { UsersService } from 'src/users/services/users.service';
@@ -37,6 +37,18 @@ export class ApplicationsService {
       this.logger.error('Create Application : ', error);
       return null;
     }
+  }
+
+  async addTermsAndConditions(appId: number, terms: TermsCondition[]) {
+    if (!appId) {
+      return null;
+    }
+    const application = await this.findOne(appId);
+    if (!application) {
+      throw new NotFoundException(MSG_EXCEPTION.NOT_FOUND_APPLICATION);
+    }
+    application.terms = terms;
+    return this.repo.save(application);
   }
 
   findByName(applicationName: string) {

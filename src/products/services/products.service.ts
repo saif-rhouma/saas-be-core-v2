@@ -11,6 +11,7 @@ import { OrderStatus } from 'src/orders/entities/order.entity';
 import { CategoriesService } from './categories.service';
 import { DATABASE_TYPE } from 'src/common/constants/global';
 import { ConfigService } from '@nestjs/config';
+import { PRODUCT_QUERIES } from './query.string';
 
 @Injectable()
 export class ProductService {
@@ -167,44 +168,9 @@ export class ProductService {
     if (!appId) {
       return null;
     }
-    if (
-      this.config.get('databaseType') === DATABASE_TYPE.MYSQL ||
-      this.config.get('databaseType') === DATABASE_TYPE.POSTGRESQL
-    ) {
-      //? NOTES: MySQL Query
 
-      const stringQuery =
-        this.config.get('databaseType') !== DATABASE_TYPE.POSTGRESQL
-          ? `SELECT p.*, SUM(op.quantity) AS total_quantity
-      FROM product p
-      LEFT JOIN product_to_order op ON p.id = op.productId 
-      LEFT JOIN \`order\` o ON op.orderId = o.id
-      LEFT JOIN application s ON o.applicationId = s.id
-      WHERE s.id = ${appId}
-      GROUP BY p.id, p.name
-      ORDER BY total_quantity DESC;`
-          : ` SELECT p.*, SUM(op.quantity) AS total_quantity
-      FROM product p
-      LEFT JOIN product_to_order op ON p.id = op."productId"
-      LEFT JOIN "order" o ON op."orderId" = o.id
-      LEFT JOIN application s ON o."applicationId" = s.id
-      WHERE s.id = ${appId}
-      GROUP BY p.id, p.name
-      ORDER BY total_quantity DESC;`;
-
-      const analytics = await this.repo.manager.query(stringQuery);
-
-      return analytics;
-    }
-    const analytics = await this.repo.manager.query(`
-      SELECT p.*, SUM(op.quantity) AS total_quantity
-      FROM product p
-      LEFT JOIN product_to_order op ON p.id = op.productId
-      LEFT JOIN "order" o ON op.orderId = o.id
-      LEFT JOIN application s ON o.applicationId = s.id
-      WHERE s.id = ${appId}
-      GROUP BY p.id, p.name
-      ORDER BY total_quantity DESC;`);
+    const queryString = PRODUCT_QUERIES.topProducts[this.config.get('databaseType')](appId);
+    const analytics = await this.repo.manager.query(queryString);
     return analytics;
   }
 
@@ -214,47 +180,9 @@ export class ProductService {
     }
 
     const LIMIT_ROW = 5;
-    if (
-      this.config.get('databaseType') === DATABASE_TYPE.MYSQL ||
-      this.config.get('databaseType') === DATABASE_TYPE.POSTGRESQL
-    ) {
-      //? NOTES: MySQL Query
 
-      const stringQuery =
-        this.config.get('databaseType') !== DATABASE_TYPE.POSTGRESQL
-          ? `SELECT p.*, SUM(op.quantity) AS total_quantity
-      FROM product p
-      LEFT JOIN product_to_order op ON p.id = op.productId 
-      LEFT JOIN \`order\` o ON op.orderId = o.id
-      LEFT JOIN application s ON o.applicationId = s.id
-      WHERE s.id = ${appId}
-      GROUP BY p.id, p.name 
-      ORDER BY total_quantity DESC
-      LIMIT ${LIMIT_ROW};`
-          : ` SELECT p.*, SUM(op.quantity) AS total_quantity
-      FROM product p
-      LEFT JOIN product_to_order op ON p.id = op."productId"
-      LEFT JOIN "order" o ON op."orderId" = o.id
-      LEFT JOIN application s ON o."applicationId" = s.id
-      WHERE s.id = ${appId}
-      GROUP BY p.id, p.name 
-      ORDER BY total_quantity DESC
-      LIMIT ${LIMIT_ROW}`;
-
-      const analytics = await this.repo.manager.query(stringQuery);
-
-      return analytics;
-    }
-    const analytics = await this.repo.manager.query(`
-      SELECT p.*, SUM(op.quantity) AS total_quantity
-      FROM product p
-      LEFT JOIN product_to_order op ON p.id = op.productId
-      LEFT JOIN "order" o ON op.orderId = o.id
-      LEFT JOIN application s ON o.applicationId = s.id
-      WHERE s.id = ${appId}
-      GROUP BY p.id, p.name
-      ORDER BY total_quantity DESC
-      LIMIT ${LIMIT_ROW};`);
+    const queryString = PRODUCT_QUERIES.topFiveProducts[this.config.get('databaseType')](appId, LIMIT_ROW);
+    const analytics = await this.repo.manager.query(queryString);
     return analytics;
   }
 }

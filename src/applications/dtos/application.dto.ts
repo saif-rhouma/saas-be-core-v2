@@ -1,5 +1,6 @@
 /* eslint-disable prettier/prettier */
 import { Expose, Transform } from 'class-transformer';
+import { TermsCondition } from '../entities/application.entity';
 export class ApplicationDto {
   @Expose()
   name: string;
@@ -35,4 +36,7 @@ export class ApplicationDto {
 
   @Expose()
   financialYear;
+
+  @Expose()
+  terms: TermsCondition[];
 }
