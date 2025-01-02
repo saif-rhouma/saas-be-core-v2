@@ -80,12 +80,16 @@ export class PlansService {
     if (!appId) {
       return null;
     }
-    // const plan = this.repo.find({
-    //   where: { application: { id: appId } },
-    //   relations: { product: true, createdBy: true, order: true },
-    // });
-    const plansQueryString = PLANS_QUERIES.findAllByApplication[this.config.get('databaseType')](appId);
-    const plans = await this.repo.manager.query(plansQueryString);
+
+    const plansQueryString = PLANS_QUERIES.findAllByApplication[this.config.get('databaseType')]();
+    const plans = await this.repo
+      .createQueryBuilder('plan')
+      .leftJoinAndSelect('plan.createdBy', 'user')
+      .leftJoinAndSelect('plan.order', 'order')
+      .leftJoinAndSelect('plan.product', 'product')
+      .where('plan.applicationId = :appId', { appId })
+      .orderBy(plansQueryString, 'ASC')
+      .getMany();
 
     if (!plans) {
       throw new NotFoundException(MSG_EXCEPTION.NOT_FOUND_PLAN);

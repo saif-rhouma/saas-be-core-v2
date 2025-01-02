@@ -894,8 +894,9 @@ Make sure disabled buttons don't get the pointer cursor.
             </tr>
           </thead>
           <tbody>
-            ${order.productToOrder?.map(
-              (product, idx) => `
+            ${order.productToOrder
+              ?.map(
+                (product, idx) => `
             <tr ${idx % 2 === 0 && 'class="tr-background-color"'}>
               <td class="border-b py-3 pl-3">${idx}.</td>
               <td class="border-b py-3 pl-2">${product.product.name}</td>
@@ -910,7 +911,8 @@ Make sure disabled buttons don't get the pointer cursor.
               </td>
             </tr>
             `,
-            )}
+              )
+              .join('')}
             <tr>
               <td colspan="7">
                 <table class="w-full border-collapse border-spacing-0">
@@ -1051,11 +1053,8 @@ Make sure disabled buttons don't get the pointer cursor.
               <td class="w-1/2 align-top">
                 <div class="px-14 py-5 text-sm text-neutral-700">
                   <p class="font-bold">Terms & Conditions:</p>
-                  <p class="italic">Delivery within 1/2 days from P.O. and advance payment.</p>
-                  <p class="italic">Payment 100% advance and before delivery.</p>
-                  <p class="italic">Delivery: Ex-factory.</p>
-                  <p class="italic">Warranty: One year "Against Manufacturing defects".the warranty does not include preventive maintenance consumables, Warranty is limited to using original parts.</p>
-                </div>
+                  ${order.application?.terms?.map((term) => `<p class="italic">${term.description}</p>`).join('')}
+                  </div>
               </td>
               <td  class="px-14 py-5 text-sm text-neutral-700" style="display: flex; justify-content: right;">
               </td>

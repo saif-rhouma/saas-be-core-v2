@@ -169,22 +169,19 @@ export class QuotationsService {
     if (user.roles.map((role) => role.name).includes(RoleType.STAFF)) {
       // TODO PermissionType.LIST_ORDER SHOULD BE CHANGED !!!
       if (!user.permissions.map((permission) => permission.slug).includes(PermissionType.GROUP_QUOTATION_LIST)) {
-        const quotationsStringQuery = QUOTATIONS_QUERIES.findAllByApplicationAdvance[this.config.get('databaseType')](
-          appId,
-          userId,
-        );
-        const quotations = await this.repo.manager.query(quotationsStringQuery);
-        // const quotations = await this.repo
-        //   .createQueryBuilder('quotation')
-        //   .leftJoinAndSelect('quotation.createdBy', 'user')
-        //   .leftJoinAndSelect('quotation.productToQuotation', 'productToQuotation')
-        //   .leftJoinAndSelect('productToQuotation.product', 'product')
-        //   .leftJoinAndSelect('quotation.order', 'order')
-        //   .leftJoinAndSelect('quotation.customer', 'customer')
-        //   .where('quotation.applicationId = :appId', { appId })
-        //   .andWhere('quotation.createdBy = :userId', { userId })
-        //   .orderBy('CAST(SUBSTRING(quotation.ref, 4, LENGTH(quotation.ref)) AS UNSIGNED)', 'ASC')
-        //   .getMany();
+        const quotationsStringQuery = QUOTATIONS_QUERIES.findAllByApplicationAdvance[this.config.get('databaseType')]();
+
+        const quotations = await this.repo
+          .createQueryBuilder('quotation')
+          .leftJoinAndSelect('quotation.createdBy', 'user')
+          .leftJoinAndSelect('quotation.productToQuotation', 'productToQuotation')
+          .leftJoinAndSelect('productToQuotation.product', 'product')
+          .leftJoinAndSelect('quotation.order', 'order')
+          .leftJoinAndSelect('quotation.customer', 'customer')
+          .where('quotation.applicationId = :appId', { appId })
+          .andWhere('quotation.createdBy = :userId', { userId })
+          .orderBy(quotationsStringQuery, 'ASC')
+          .getMany();
         if (!quotations) {
           throw new NotFoundException(MSG_EXCEPTION.NOT_FOUND_QUOTATION);
         }
@@ -193,19 +190,18 @@ export class QuotationsService {
     }
 
     const quotationsStringQuery =
-      QUOTATIONS_QUERIES.findAllByApplicationAdvanceAdmin[this.config.get('databaseType')](appId);
-    const quotations = await this.repo.manager.query(quotationsStringQuery);
+      QUOTATIONS_QUERIES.findAllByApplicationAdvanceAdmin[this.config.get('databaseType')]();
 
-    // const quotations = await this.repo
-    //   .createQueryBuilder('quotation')
-    //   .leftJoinAndSelect('quotation.createdBy', 'user')
-    //   .leftJoinAndSelect('quotation.productToQuotation', 'productToQuotation')
-    //   .leftJoinAndSelect('productToQuotation.product', 'product')
-    //   .leftJoinAndSelect('quotation.order', 'order')
-    //   .leftJoinAndSelect('quotation.customer', 'customer')
-    //   .where('quotation.applicationId = :appId', { appId })
-    //   .orderBy('CAST(SUBSTRING(quotation.ref, 4, LENGTH(quotation.ref)) AS UNSIGNED)', 'ASC')
-    //   .getMany();
+    const quotations = await this.repo
+      .createQueryBuilder('quotation')
+      .leftJoinAndSelect('quotation.createdBy', 'user')
+      .leftJoinAndSelect('quotation.productToQuotation', 'productToQuotation')
+      .leftJoinAndSelect('productToQuotation.product', 'product')
+      .leftJoinAndSelect('quotation.order', 'order')
+      .leftJoinAndSelect('quotation.customer', 'customer')
+      .where('quotation.applicationId = :appId', { appId })
+      .orderBy(quotationsStringQuery, 'ASC')
+      .getMany();
 
     if (!quotations) {
       throw new NotFoundException(MSG_EXCEPTION.NOT_FOUND_QUOTATION);

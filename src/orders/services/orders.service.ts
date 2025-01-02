@@ -120,21 +120,21 @@ export class OrdersService {
     if (user.roles.map((role) => role.name).includes(RoleType.STAFF)) {
       // TODO PermissionType.LIST_ORDER SHOULD BE CHANGED !!!
       if (!user.permissions.map((permission) => permission.slug).includes(PermissionType.GROUP_ORDER_LIST)) {
-        // const orders = await this.repo
-        //   .createQueryBuilder('order')
-        //   .leftJoinAndSelect('order.createdBy', 'user')
-        //   .leftJoinAndSelect('order.productToOrder', 'productToOrder')
-        //   .leftJoinAndSelect('productToOrder.product', 'product')
-        //   .leftJoinAndSelect('order.customer', 'customer')
-        //   .where('order.applicationId = :appId', { appId })
-        //   .andWhere('order.createdBy = :userId', { userId })
-        //   .orderBy('CAST(SUBSTRING(order.ref, 4, LENGTH(order.ref)) AS UNSIGNED)', 'ASC')
-        //   .getMany();
         const ordersStringQuery = ORDERS_QUERIES.findAllByApplicationAdvanced.staff[this.config.get('databaseType')](
           appId,
           userId,
         );
-        const orders = await this.repo.manager.query(ordersStringQuery);
+        const orders = await this.repo
+          .createQueryBuilder('order')
+          .leftJoinAndSelect('order.createdBy', 'user')
+          .leftJoinAndSelect('order.productToOrder', 'productToOrder')
+          .leftJoinAndSelect('productToOrder.product', 'product')
+          .leftJoinAndSelect('order.customer', 'customer')
+          .where('order.applicationId = :appId', { appId })
+          .andWhere('order.createdBy = :userId', { userId })
+          .orderBy(ordersStringQuery, 'ASC')
+          .getMany();
+
         if (!orders) {
           throw new NotFoundException(MSG_EXCEPTION.NOT_FOUND_ORDER);
         }
@@ -143,17 +143,16 @@ export class OrdersService {
     }
 
     const ordersStringQuery = ORDERS_QUERIES.findAllByApplicationAdvanced.admin[this.config.get('databaseType')](appId);
-    const orders = await this.repo.manager.query(ordersStringQuery);
 
-    // const orders = await this.repo
-    //   .createQueryBuilder('order')
-    //   .leftJoinAndSelect('order.createdBy', 'user')
-    //   .leftJoinAndSelect('order.productToOrder', 'productToOrder')
-    //   .leftJoinAndSelect('productToOrder.product', 'product')
-    //   .leftJoinAndSelect('order.customer', 'customer')
-    //   .where('order.applicationId = :appId', { appId })
-    //   .orderBy('CAST(SUBSTRING(order.ref, 4, LENGTH(order.ref)) AS UNSIGNED)', 'ASC')
-    //   .getMany();
+    const orders = await this.repo
+      .createQueryBuilder('order')
+      .leftJoinAndSelect('order.createdBy', 'user')
+      .leftJoinAndSelect('order.productToOrder', 'productToOrder')
+      .leftJoinAndSelect('productToOrder.product', 'product')
+      .leftJoinAndSelect('order.customer', 'customer')
+      .where('order.applicationId = :appId', { appId })
+      .orderBy(ordersStringQuery, 'ASC')
+      .getMany();
 
     if (!orders) {
       throw new NotFoundException(MSG_EXCEPTION.NOT_FOUND_ORDER);

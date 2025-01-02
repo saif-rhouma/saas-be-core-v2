@@ -4,89 +4,14 @@ import { OrderStatus } from '../entities/order.entity';
 export const ORDERS_QUERIES = {
   findAllByApplicationAdvanced: {
     staff: {
-      postgres: (appId, userId) => `SELECT 
-  "order".*, 
-  "user".*, 
-  productToOrder.*, 
-  product.*, 
-  customer.*
-FROM "order"
-LEFT JOIN "user" ON "order"."createdById" = "user".id
-LEFT JOIN product_to_order AS productToOrder ON "order".id = productToOrder."orderId"
-LEFT JOIN product ON productToOrder."productId" = product.id
-LEFT JOIN customer ON "order"."customerId" = customer.id
-WHERE "order"."applicationId" = ${appId}
-  AND "order"."createdById" = ${userId}
-ORDER BY CAST(SUBSTRING("order".ref, 4) AS INTEGER) ASC;`,
-      mysql: (appId, userId) => `SELECT 
-  "order".*, 
-  "user".*, 
-  productToOrder.*, 
-  product.*, 
-  customer.*
-FROM "order"
-LEFT JOIN "user" ON "order"."createdById" = "user".id
-LEFT JOIN product_to_order AS productToOrder ON "order".id = productToOrder."orderId"
-LEFT JOIN product ON productToOrder."productId" = product.id
-LEFT JOIN customer ON "order"."customerId" = customer.id
-WHERE "order"."applicationId" = ${appId}
-  AND "order"."createdById" = ${userId}
-ORDER BY CAST(SUBSTRING(order.ref, 4, LENGTH(order.ref)) AS UNSIGNED) ASC;`,
-      sqlite: (appId, userId) => `SELECT 
-  "order".*, 
-  "user".*, 
-  productToOrder.*, 
-  product.*, 
-  customer.*
-FROM "order"
-LEFT JOIN "user" ON "order"."createdById" = "user".id
-LEFT JOIN product_to_order AS productToOrder ON "order".id = productToOrder."orderId"
-LEFT JOIN product ON productToOrder."productId" = product.id
-LEFT JOIN customer ON "order"."customerId" = customer.id
-WHERE "order"."applicationId" = ${appId}
-  AND "order"."createdById" = ${userId}
-ORDER BY CAST(SUBSTRING(order.ref, 4, LENGTH(order.ref)) AS UNSIGNED) ASC;`,
+      postgres: () => `CAST(SUBSTRING("order".ref, 4) AS INTEGER)`,
+      mysql: () => `CAST(SUBSTRING(order.ref, 4, LENGTH(order.ref)) AS UNSIGNED)`,
+      sqlite: () => `CAST(SUBSTRING(order.ref, 4, LENGTH(order.ref)) AS UNSIGNED)`,
     },
     admin: {
-      postgres: (appId) => `SELECT 
-  "order".*, 
-  "user".*, 
-  productToOrder.*, 
-  product.*, 
-  customer.*
-FROM "order"
-LEFT JOIN "user" ON "order"."createdById" = "user".id
-LEFT JOIN product_to_order AS productToOrder ON "order".id = productToOrder."orderId"
-LEFT JOIN product ON productToOrder."productId" = product.id
-LEFT JOIN customer ON "order"."customerId" = customer.id
-WHERE "order"."applicationId" = ${appId}
-ORDER BY CAST(SUBSTRING("order".ref, 4) AS INTEGER) ASC;`,
-      mysql: (appId) => `SELECT 
-  "order".*, 
-  "user".*, 
-  productToOrder.*, 
-  product.*, 
-  customer.*
-FROM "order"
-LEFT JOIN "user" ON "order"."createdById" = "user".id
-LEFT JOIN product_to_order AS productToOrder ON "order".id = productToOrder."orderId"
-LEFT JOIN product ON productToOrder."productId" = product.id
-LEFT JOIN customer ON "order"."customerId" = customer.id
-WHERE "order"."applicationId" = ${appId}
-ORDER BY CAST(SUBSTRING(order.ref, 4, LENGTH(order.ref)) AS UNSIGNED) ASC;`,
-      sqlite: (appId) => `SELECT 
-  "order".*, 
-  "user".*, 
-  productToOrder.*, 
-  product.*, 
-  customer.*
-FROM "order"
-LEFT JOIN "user" ON "order"."createdById" = "user".id
-LEFT JOIN product_to_order AS productToOrder ON "order".id = productToOrder."orderId"
-LEFT JOIN product ON productToOrder."productId" = product.id
-LEFT JOIN customer ON "order"."customerId" = customer.id
-WHERE "order"."applicationId" = ${appId}
-ORDER BY CAST(SUBSTRING(order.ref, 4, LENGTH(order.ref)) AS UNSIGNED) ASC;`,
+      postgres: () => `CAST(SUBSTRING("order".ref, 4) AS INTEGER)`,
+      mysql: () => `CAST(SUBSTRING(order.ref, 4, LENGTH(order.ref)) AS UNSIGNED)`,
+      sqlite: () => `CAST(SUBSTRING(order.ref, 4, LENGTH(order.ref)) AS UNSIGNED)`,
     },
   },
   updateAmount: {
